@@ -193,19 +193,30 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   const discardResult = handDiscard(hand, tileIndex >= 0 ? tileIndex : hand.tiles.length - 1);
   const handAfterDiscard = discardResult.hand;
   
-  // 2. 检查是否胡牌（13张牌）
-  const lastDraw = handAfterDiscard.lastDraw;
-  if (lastDraw && handAfterDiscard.tiles.length === 13) {
-    const agariResult = isAgari(handAfterDiscard, lastDraw);
+  // 2. 从牌山摸一张新牌
+  const drawResult = drawFromWall(wall, handAfterDiscard);
+  
+  // 3. 检查摸牌后的手牌是否胡牌（14张牌，含lastDraw）
+  const finalHand = drawResult.newHand;
+  const finalLastDraw = finalHand.lastDraw;
+  
+  if (finalLastDraw && finalHand.tiles.length === 14) {
+    // 创建13张牌的tempHand用于胡牌判定
+    const tilesWithoutLast = finalHand.tiles.filter(t => t.id !== finalLastDraw.id);
+    const tempHand = { 
+      ...finalHand, 
+      tiles: tilesWithoutLast.length === 13 ? tilesWithoutLast : finalHand.tiles.slice(0, -1)
+    };
+    const agariResult = isAgari(tempHand, finalLastDraw);
+    
     if (agariResult.isAgari) {
       const pattern = getPatternName(agariResult.form);
-      const fan = calculateFan(pattern, handAfterDiscard);
-      const baseScore = calculateBaseScore(handAfterDiscard);
+      const fan = calculateFan(pattern, tempHand);
+      const baseScore = calculateBaseScore(finalHand);
       const score = baseScore * fan;
-      // 胡牌了，不继续摸牌
       return {
-        newHand: handAfterDiscard,
-        newWall: wall,
+        newHand: finalHand,
+        newWall: drawResult.newWall,
         drawnTile: null,
         message: `胡牌！${pattern} ${fan}番 ${score}分`,
         isWin: true,
@@ -216,39 +227,11 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     }
   }
   
-  // 3. 从牌山摸一张新牌
-  const drawResult = drawFromWall(wall, handAfterDiscard);
+  // 4. 检查牌山是否已空（摸完最后一张后还没胡牌）
+  const isWallEmpty = drawResult.newWall.currentIndex >= drawResult.newWall.tiles.length;
   
-  if (!drawResult.tile) {
-    // 牌山已空（最后一张牌摸入后）
-    // 检查摸入最后一张后的手牌是否胡牌
-    const finalHand = drawResult.newHand;
-    const finalLastDraw = finalHand.lastDraw;
-    if (finalLastDraw && finalHand.tiles.length === 14) {
-      const tilesWithoutLast = finalHand.tiles.filter(t => t.id !== finalLastDraw.id);
-      const tempHand = { 
-        ...finalHand, 
-        tiles: tilesWithoutLast.length === 13 ? tilesWithoutLast : finalHand.tiles.slice(0, -1)
-      };
-      const agariResult = isAgari(tempHand, finalLastDraw);
-      if (agariResult.isAgari) {
-        const pattern = getPatternName(agariResult.form);
-        const fan = calculateFan(pattern, tempHand);
-        const baseScore = calculateBaseScore(finalHand);
-        const score = baseScore * fan;
-        return {
-          newHand: finalHand,
-          newWall: drawResult.newWall,
-          drawnTile: null,
-          message: `牌山最后一张胡牌！${pattern} ${fan}番 ${score}分`,
-          isWin: true,
-          winPattern: pattern,
-          winFan: fan,
-          winScore: score
-        };
-      }
-    }
-    // 没胡牌，牌山已空
+  if (isWallEmpty) {
+    // 没胡牌，牌山已空，直接结算
     return {
       newHand: drawResult.newHand,
       newWall: drawResult.newWall,
@@ -261,11 +244,12 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     };
   }
   
+  // 5. 牌山还有牌，正常继续游戏
   return {
     newHand: drawResult.newHand,
     newWall: drawResult.newWall,
     drawnTile: drawResult.tile,
-    message: `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}，请选择一张牌丢弃`,
+    message: `摸到 ${TILE_NAMES[drawResult.tile!.id as TileId]}，请选择一张牌丢弃`,
     isWin: false,
     winPattern: '',
     winFan: 0,
