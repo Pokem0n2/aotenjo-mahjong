@@ -323,9 +323,10 @@
 }
 
 .tileImg {
-  width: 80%;
-  height: 80%;
+  width: 90%;
+  height: 90%;
   object-fit: contain;
+  display: block;
 }
 
 .hiddenTile {
@@ -360,7 +361,10 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s;
-  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .handTile:hover {
