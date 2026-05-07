@@ -225,6 +225,70 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   };
 }
 
+// ========== 胡牌后自动丢弃lastDraw并摸新牌 ==========
+export function autoDiscardAfterWin(wall: WallState, hand: HandState): {
+  newHand: HandState;
+  newWall: WallState;
+  drawnTile: Tile | null;
+  message: string;
+} {
+  // 1. 自动丢弃lastDraw（最后摸到的牌）
+  const lastDrawTile = hand.lastDraw;
+  if (!lastDrawTile) {
+    // 没有lastDraw，直接摸牌
+    const drawResult = drawFromWall(wall, hand);
+    return {
+      newHand: drawResult.newHand,
+      newWall: drawResult.newWall,
+      drawnTile: drawResult.tile,
+      message: drawResult.tile ? `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}` : '牌山已空！'
+    };
+  }
+  
+  // 找到lastDraw在手牌中的索引（最后一张匹配的牌）
+  let lastIndex = -1;
+  for (let i = hand.tiles.length - 1; i >= 0; i--) {
+    if (hand.tiles[i].id === lastDrawTile.id) {
+      lastIndex = i;
+      break;
+    }
+  }
+  
+  if (lastIndex === -1) {
+    // 找不到lastDraw，直接摸牌
+    const drawResult = drawFromWall(wall, hand);
+    return {
+      newHand: drawResult.newHand,
+      newWall: drawResult.newWall,
+      drawnTile: drawResult.tile,
+      message: drawResult.tile ? `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}` : '牌山已空！'
+    };
+  }
+  
+  // 丢弃lastDraw
+  const discardResult = handDiscard(hand, lastIndex);
+  const handAfterDiscard = discardResult.hand;
+  
+  // 2. 从牌山摸一张新牌
+  const drawResult = drawFromWall(wall, handAfterDiscard);
+  
+  if (!drawResult.tile) {
+    return {
+      newHand: drawResult.newHand,
+      newWall: drawResult.newWall,
+      drawnTile: null,
+      message: '牌山已空！'
+    };
+  }
+  
+  return {
+    newHand: drawResult.newHand,
+    newWall: drawResult.newWall,
+    drawnTile: drawResult.tile,
+    message: `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}，请选择一张牌丢弃`
+  };
+}
+
 // ========== 判断胡牌 ==========
 export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean; pattern: string; fan: number; score: number } {
   const lastTile = winningTile || hand.lastDraw;

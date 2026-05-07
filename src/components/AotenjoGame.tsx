@@ -5,7 +5,7 @@ import {
   createGameState, createLevel, generateShopChoices,
   addItemCard, updateItemsAfterLevel, updateItemsAfterWin,
   discardAndDraw, checkWin, calculateBaseScore, applyItemEffects,
-  tileToId, drawFromWall
+  tileToId, drawFromWall, autoDiscardAfterWin
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES } from '../types/tile';
 
@@ -145,11 +145,36 @@ export default function AotenjoGame() {
         checkLevelComplete(newLevel);
       }, 1500);
     } else {
-      // 继续自动摸牌
+      // 胡牌后自动丢弃lastDraw，然后继续摸牌
       setTimeout(() => {
         const latestLevel = levelRef.current;
         if (latestLevel) {
-          autoDrawAfterWin(latestLevel);
+          // 自动丢弃lastDraw并摸新牌
+          const autoResult = autoDiscardAfterWin(latestLevel.wall, latestLevel.hand);
+          const autoLevel: LevelState = {
+            ...latestLevel,
+            hand: autoResult.newHand,
+            wall: autoResult.newWall
+          };
+          setLevelState(autoLevel);
+          levelRef.current = autoLevel;
+          
+          if (autoResult.drawnTile) {
+            // 检查新摸的牌是否胡牌
+            const winResult = checkWin(autoResult.newHand, autoResult.drawnTile);
+            if (winResult.isWin) {
+              handleWin(autoLevel, winResult.pattern, winResult.fan, winResult.score);
+            } else {
+              setAnimating(false);
+              setMessage(autoResult.message);
+            }
+          } else {
+            setAnimating(false);
+            setMessage(autoResult.message);
+            if (autoResult.message === '牌山已空！') {
+              setTimeout(() => checkLevelComplete(autoLevel), 1000);
+            }
+          }
         }
       }, 1200);
     }
@@ -417,7 +442,18 @@ export default function AotenjoGame() {
           <h3>手牌 ({levelState.hand.tiles.length}张) - 点击直接丢弃</h3>
           <div className={styles.handGrid}>
             {levelState.hand.tiles.map((tile, index) => {
-              const isLastDraw = levelState.hand.lastDraw && tile.id === levelState.hand.lastDraw.id;
+              // 通过索引匹配lastDraw：找到lastDraw在手牌中的实际索引（最后一张匹配的牌）
+              let lastDrawIndex = -1;
+              if (levelState.hand.lastDraw) {
+                for (let i = levelState.hand.tiles.length - 1; i >= 0; i--) {
+                  if (levelState.hand.tiles[i].id === levelState.hand.lastDraw.id) {
+                    lastDrawIndex = i;
+                    break;
+                  }
+                }
+              }
+              const isLastDraw = index === lastDrawIndex;
+              
               return (
                 <button
                   key={index}
