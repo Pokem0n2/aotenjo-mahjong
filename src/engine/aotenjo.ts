@@ -187,6 +187,7 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   winPattern: string;
   winFan: number;
   winScore: number;
+  isWallEmpty: boolean; // 牌山是否已空
 } {
   // 1. 丢弃选中的牌
   const tileIndex = hand.tiles.findIndex(t => t.id === discardTile.id);
@@ -214,6 +215,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
       const fan = calculateFan(pattern, tempHand);
       const baseScore = calculateBaseScore(finalHand);
       const score = baseScore * fan;
+      // 检查牌山是否已空
+      const wallEmpty = drawResult.newWall.currentIndex >= drawResult.newWall.tiles.length;
       return {
         newHand: finalHand,
         newWall: drawResult.newWall,
@@ -222,7 +225,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
         isWin: true,
         winPattern: pattern,
         winFan: fan,
-        winScore: score
+        winScore: score,
+        isWallEmpty: wallEmpty
       };
     }
   }
@@ -240,7 +244,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
       isWin: false,
       winPattern: '',
       winFan: 0,
-      winScore: 0
+      winScore: 0,
+      isWallEmpty: true
     };
   }
   
@@ -253,7 +258,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     isWin: false,
     winPattern: '',
     winFan: 0,
-    winScore: 0
+    winScore: 0,
+    isWallEmpty: false
   };
 }
 

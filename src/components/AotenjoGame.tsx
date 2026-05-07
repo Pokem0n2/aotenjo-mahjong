@@ -261,8 +261,7 @@ export default function AotenjoGame() {
     levelRef.current = newLevel;
     
     if (result.isWin) {
-      // 胡牌了（正常弃牌后胡牌，或牌山最后一张胡牌）
-      // 累加得分到关卡总分
+      // 胡牌了！累加得分到关卡总分
       const updatedLevel: LevelState = {
         ...newLevel,
         currentScore: newLevel.currentScore + result.winScore
@@ -276,14 +275,40 @@ export default function AotenjoGame() {
       setScoreDetails(prev => [...prev, `${result.winPattern} ${result.winFan}番 +${result.winScore}分`]);
       setMessage(result.message);
       
-      // 1秒后自动进入结算
+      // 1.5秒后自动丢弃lastDraw并继续游戏（如果牌山还有牌）
       setTimeout(() => {
         setWinEffect({ pattern: '', visible: false });
         setScorePopup({ score: 0, visible: false });
-        checkLevelComplete(updatedLevel);
+        
+        if (result.isWallEmpty) {
+          // 牌山已空，进入结算
+          checkLevelComplete(updatedLevel);
+        } else {
+          // 牌山还有牌，自动丢弃lastDraw并继续
+          const continueResult = autoDiscardAfterWin(updatedLevel.wall, updatedLevel.hand);
+          const continueLevel: LevelState = {
+            ...updatedLevel,
+            hand: continueResult.newHand,
+            wall: continueResult.newWall
+          };
+          setLevelState(continueLevel);
+          levelRef.current = continueLevel;
+          
+          if (continueResult.drawnTile) {
+            setAnimating(false);
+            setMessage(continueResult.message + '，请选择一张牌丢弃');
+          } else {
+            // 牌山空了
+            setAnimating(false);
+            setMessage('牌山已空！');
+            setTimeout(() => {
+              checkLevelComplete(continueLevel);
+            }, 1000);
+          }
+        }
       }, 1500);
-    } else if (!result.drawnTile) {
-      // 牌山已空，没胡牌，直接进入结算（用已累计的总分判断）
+    } else if (result.isWallEmpty) {
+      // 牌山已空，没胡牌，直接进入结算
       setAnimating(false);
       setMessage(result.message);
       setTimeout(() => {
