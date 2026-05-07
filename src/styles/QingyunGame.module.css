@@ -1,0 +1,849 @@
+.gameContainer {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #e0e0e0;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+
+/* ===== 标题画面 ===== */
+.titleScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.gameTitle {
+  font-size: 4rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #ffd700, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #a0a0a0;
+  margin-bottom: 2rem;
+}
+
+.titleButtons {
+  margin: 2rem 0;
+}
+
+.startBtn {
+  padding: 1rem 3rem;
+  font-size: 1.5rem;
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.startBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(238, 90, 36, 0.5);
+}
+
+.rules {
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-top: 2rem;
+}
+
+.rules h3 {
+  color: #ffd700;
+  margin-bottom: 1rem;
+}
+
+.rules ul {
+  list-style: none;
+  padding: 0;
+}
+
+.rules li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rules li::before {
+  content: '🀄 ';
+}
+
+/* ===== 楼层选择 ===== */
+.floorSelect {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.playerStatus {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.playerStatus span {
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.floorGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.floorBtn {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  padding: 0.5rem;
+}
+
+.floorBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffd700;
+  transform: scale(1.05);
+}
+
+.floorBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.floorBtn.cleared {
+  background: rgba(0, 255, 0, 0.1);
+  border-color: #00ff00;
+}
+
+.floorBtn.current {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.floorNum {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.clearMark {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  color: #00ff00;
+  font-size: 0.8rem;
+}
+
+.bossMark {
+  position: absolute;
+  bottom: 2px;
+  font-size: 0.6rem;
+  color: #ff4444;
+  font-weight: bold;
+}
+
+.shopMark {
+  position: absolute;
+  bottom: 2px;
+  font-size: 0.6rem;
+  color: #44ff44;
+}
+
+/* ===== 战斗画面 ===== */
+.battleScreen {
+  padding: 1rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.enemyArea {
+  background: rgba(255, 0, 0, 0.1);
+  border: 2px solid rgba(255, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.enemyInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.enemyName {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff6b6b;
+}
+
+.enemyHpBar {
+  flex: 1;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.enemyHpFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4444, #ff6b6b);
+  transition: width 0.3s;
+}
+
+.enemyHpText {
+  font-size: 0.9rem;
+  color: #ffaaaa;
+}
+
+.enemyDesc {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.doraArea {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 5px;
+  margin-bottom: 1rem;
+}
+
+.doraLabel {
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.doraTile {
+  width: 40px;
+  height: 55px;
+  object-fit: contain;
+}
+
+/* ===== 手牌区域 ===== */
+.handArea {
+  margin: 1rem 0;
+}
+
+.handArea h3 {
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+}
+
+.handTiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.tileBtn {
+  width: 60px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0.2rem;
+}
+
+.tileBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px);
+}
+
+.tileBtn.selected {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.2);
+  transform: translateY(-10px);
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+.tileBtn.universal {
+  border-color: #ff00ff;
+  background: rgba(255, 0, 255, 0.1);
+}
+
+.tileImg {
+  width: 50px;
+  height: 65px;
+  object-fit: contain;
+}
+
+.universalBadge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff00ff;
+  color: white;
+  font-size: 0.6rem;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* ===== 战斗信息 ===== */
+.battleInfo {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 1rem 0;
+}
+
+.infoRow {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tenpaiInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.tenpaiTile {
+  width: 30px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.riichiBadge {
+  display: inline-block;
+  background: #ff4444;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  margin-left: 1rem;
+}
+
+/* ===== 战斗控制按钮 ===== */
+.battleControls {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.battleControls button {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: bold;
+}
+
+.battleControls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.btnDisabled {
+  position: relative;
+}
+
+.btnDisabled::after {
+  content: '🔒';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.discardBtn {
+  background: linear-gradient(45deg, #4ecdc4, #44a3aa);
+  color: white;
+}
+
+.discardBtn:hover:not(:disabled) {
+  box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+}
+
+.riichiBtn {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  color: white;
+}
+
+.riichiBtn:hover:not(:disabled) {
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+}
+
+.tsumoBtn {
+  background: linear-gradient(45deg, #ffd700, #ff8c00);
+  color: #1a1a2e;
+}
+
+.tsumoBtn:hover:not(:disabled) {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.universalBtn {
+  background: linear-gradient(45deg, #ff00ff, #aa00aa);
+  color: white;
+}
+
+.universalBtn:hover:not(:disabled) {
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+}
+
+/* ===== 万能天引选择器 ===== */
+.universalPicker {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1a1a2e;
+  border: 2px solid #ff00ff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  z-index: 1000;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.universalPicker h4 {
+  color: #ff00ff;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.universalGrid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 0.3rem;
+}
+
+.universalOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 0.3rem;
+  transition: all 0.2s;
+}
+
+.universalOption:hover {
+  background: rgba(255, 0, 255, 0.2);
+  border-color: #ff00ff;
+}
+
+.universalOption img {
+  width: 40px;
+  height: 55px;
+}
+
+.universalOption span {
+  font-size: 0.7rem;
+  color: #aaa;
+}
+
+.closeBtn {
+  display: block;
+  margin: 1rem auto 0;
+  padding: 0.5rem 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* ===== 玩家状态条 ===== */
+.playerStatusBar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 255, 0, 0.05);
+  border-radius: 10px;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.playerHpBar {
+  flex: 1;
+  min-width: 100px;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.playerHpFill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff00, #44ff44);
+  transition: width 0.3s;
+}
+
+/* ===== 商店 ===== */
+.shopScreen {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.shopScreen h2 {
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.shopInfo {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.shopItems {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.shopItem {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.shopItem:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.itemName {
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.itemRarity {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.itemRarity.N {
+  background: #9e9e9e;
+  color: white;
+}
+
+.itemRarity.R {
+  background: #2196f3;
+  color: white;
+}
+
+.itemRarity.L {
+  background: #ff9800;
+  color: white;
+}
+
+.itemDesc {
+  color: #aaa;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.itemFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.itemCost {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.buyBtn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(45deg, #4ecdc4, #44a3aa);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.buyBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shopControls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.refreshBtn {
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(45deg, #ffd700, #ff8c00);
+  color: #1a1a2e;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.leaveBtn {
+  padding: 0.8rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* ===== 结果画面 ===== */
+.resultScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.resultTitle {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.victoryTitle {
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.partialTitle {
+  color: #ff8c00;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.resultStats {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: 10px;
+  min-width: 400px;
+  max-width: 600px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.resultSection {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border-left: 3px solid #ffd700;
+}
+
+.resultSection h4 {
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.resultSection p {
+  font-size: 1rem;
+  margin: 0.3rem 0;
+  color: #e0e0e0;
+}
+
+.highlightScore {
+  color: #ffd700;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.enemyDamage {
+  color: #ff6b6b;
+}
+
+.damageValue {
+  color: #ff4444;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.coinValue {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.resultYaku {
+  margin-top: 1rem;
+}
+
+.resultYaku h4 {
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+}
+
+.yakuList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.yakuTag {
+  display: inline-block;
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  padding: 0.3rem 0.6rem;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.continueBtn {
+  margin-top: 2rem;
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  background: linear-gradient(45deg, #4ecdc4, #44a3aa);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.continueBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+}
+
+/* ===== 游戏结束 ===== */
+.gameOverScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.gameOverTitle {
+  font-size: 3rem;
+  color: #ff4444;
+  margin-bottom: 2rem;
+}
+
+.finalStats {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: 10px;
+  min-width: 300px;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.finalStats p {
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+}
+
+.restartBtn {
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+}
+
+/* ===== 通用消息 ===== */
+.message {
+  text-align: center;
+  padding: 1rem;
+  color: #aaa;
+  font-size: 1rem;
+  min-height: 3rem;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .floorGrid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .universalGrid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .gameTitle {
+    font-size: 2.5rem;
+  }
+
+  .tileBtn {
+    width: 50px;
+    height: 70px;
+  }
+
+  .tileImg {
+    width: 40px;
+    height: 55px;
+  }
+}

@@ -1,0 +1,133 @@
+.table {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr auto;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  background: linear-gradient(135deg, #1a6b3c 0%, #0d4424 100%);
+  border-radius: 16px;
+  padding: 20px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.deckInfo {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 16px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.playerNorth {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.playerWest {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.playerEast {
+  grid-column: 3;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.playerSouth {
+  grid-column: 2;
+  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.playerLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: bold;
+}
+
+.discardArea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 120px;
+  justify-content: center;
+}
+
+.centerArea {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lastDiscard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 215, 0, 0.6);
+}
+
+.lastDiscard .label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.playerHandArea {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.handWrapper {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 8px 16px;
+}
+
+.currentIndicator {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 12px;
+  border-radius: 12px;
+  color: #ffd700;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .table {
+    padding: 12px;
+    gap: 8px;
+  }
+}

@@ -1,0 +1,22 @@
+.hand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .tiles {
+    gap: 2px;
+  }
+}
