@@ -5,7 +5,8 @@ import { isAgari, AgariResult } from './agari';
 // ========== 牌山状态 ==========
 export interface WallState {
   tiles: Tile[];           // 36张牌（独立于手牌）
-  currentIndex: number;    // 当前摸牌位置（0-35）
+  revealed: boolean[];      // 哪些位置是明牌（随机9张）
+  currentIndex: number;     // 当前摸牌位置（0-35）
 }
 
 // ========== 道具卡定义 ==========
@@ -121,20 +122,29 @@ export function createLevel(level: number, itemSlots: ItemSlot[]): LevelState {
   // 3. 从剩余牌中抽取36张作为牌山
   const wallTiles = shuffled.slice(13, 13 + 36);
   
-  // 4. 牌山初始状态：currentIndex=0，第一张牌（索引0）是"当前要摸的牌"
+  // 4. 随机选择9个位置作为明牌
+  const revealed = new Array(36).fill(false);
+  const revealedSet = new Set<number>();
+  while (revealedSet.size < 9) {
+    revealedSet.add(Math.floor(Math.random() * 36));
+  }
+  revealedSet.forEach(idx => revealed[idx] = true);
+  
+  // 5. 牌山初始状态
   const wall: WallState = {
     tiles: wallTiles,
+    revealed,
     currentIndex: 0
   };
   
-  // 5. 初始摸一张牌到手牌（玩家有14张，需要弃1张）
+  // 6. 初始摸一张牌到手牌（玩家有14张，需要弃1张）
   const initialDrawTile = wallTiles[0];
   const handWithDraw = handDraw(hand, initialDrawTile);
   
-  // 6. 更新牌山：currentIndex推进到1（第一张已摸走）
+  // 7. 更新牌山：currentIndex推进到1（第一张已摸走）
   wall.currentIndex = 1;
   
-  // 7. 计算目标分数
+  // 8. 计算目标分数
   const targetScore = level === 1 ? 2000 : Math.pow(5, level - 1) * 2000;
   
   return {
@@ -160,6 +170,7 @@ export function drawFromWall(wall: WallState, hand: HandState): { newHand: HandS
   const newHand = handDraw(hand, tile);
   const newWall: WallState = {
     tiles: wall.tiles,
+    revealed: wall.revealed,
     currentIndex: wall.currentIndex + 1
   };
   

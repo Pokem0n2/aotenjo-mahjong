@@ -266,19 +266,19 @@
 
 .wallGrid {
   display: grid;
-  grid-template-columns: repeat(9, 40px);
-  grid-template-rows: repeat(4, 54px);
-  gap: 4px;
+  grid-template-columns: repeat(9, 60px);
+  grid-template-rows: repeat(4, 80px);
+  gap: 6px;
   justify-content: center;
   margin: 0 auto;
 }
 
 .wallTile {
-  width: 40px;
-  height: 54px;
+  width: 60px;
+  height: 80px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid #333;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,14 +369,21 @@
   box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
 }
 
-.handTile:active {
-  transform: translateY(-2px);
-  border-color: #ff4757;
+.handTile.lastDrawHighlight {
+  border-color: #ffd700;
+  border-width: 3px;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .handTile.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.handTile:active {
+  transform: translateY(-2px);
+  border-color: #ff4757;
 }
 
 /* 操作区 */

@@ -383,30 +383,27 @@ export default function AotenjoGame() {
             {Array.from({ length: 36 }, (_, index) => {
               const tile = wall.tiles[index];
               const isDrawn = index < wall.currentIndex; // 已摸走的牌
-              const isCurrent = index === wall.currentIndex; // 当前要摸的牌（黄色高亮）
-              const isFuture = index > wall.currentIndex; // 未摸的牌
+              const isRevealed = wall.revealed[index];   // 随机明牌
               
               return (
                 <div
                   key={index}
                   className={`${styles.wallTile} ${
                     isDrawn ? styles.drawn : ''
-                  } ${isCurrent ? styles.currentHighlight : ''} ${
-                    isFuture ? styles.future : ''
                   }`}
                 >
                   {isDrawn ? (
                     // 已摸走的牌：空白占位框
                     <div className={styles.emptyTile}></div>
-                  ) : isCurrent ? (
-                    // 当前要摸的牌：明牌展示 + 黄色高亮
+                  ) : isRevealed ? (
+                    // 明牌：展示牌面
                     <img
                       src={`/tiles/${tile.id}.png`}
                       alt={tile.id}
                       className={styles.tileImg}
                     />
                   ) : (
-                    // 未摸的牌：暗牌"?"
+                    // 暗牌：显示"?"
                     <div className={styles.hiddenTile}>?</div>
                   )}
                 </div>
@@ -415,29 +412,32 @@ export default function AotenjoGame() {
           </div>
         </div>
         
-        {/* 手牌 - 直接点击即丢弃 */}
+        {/* 手牌 - 直接点击即丢弃，lastDraw高亮 */}
         <div className={styles.handSection}>
           <h3>手牌 ({levelState.hand.tiles.length}张) - 点击直接丢弃</h3>
           <div className={styles.handGrid}>
-            {levelState.hand.tiles.map((tile, index) => (
-              <button
-                key={index}
-                className={`${styles.handTile} ${animating ? styles.disabled : ''}`}
-                onClick={() => {
-                  if (!animating) {
-                    discardTile(tile);
-                  }
-                }}
-                disabled={animating}
-                title="点击丢弃此牌"
-              >
-                <img
-                  src={`/tiles/${tile.id}.png`}
-                  alt={tile.id}
-                  className={styles.tileImg}
-                />
-              </button>
-            ))}
+            {levelState.hand.tiles.map((tile, index) => {
+              const isLastDraw = levelState.hand.lastDraw && tile.id === levelState.hand.lastDraw.id;
+              return (
+                <button
+                  key={index}
+                  className={`${styles.handTile} ${isLastDraw ? styles.lastDrawHighlight : ''} ${animating ? styles.disabled : ''}`}
+                  onClick={() => {
+                    if (!animating) {
+                      discardTile(tile);
+                    }
+                  }}
+                  disabled={animating}
+                  title={isLastDraw ? "刚摸到的牌，点击丢弃" : "点击丢弃此牌"}
+                >
+                  <img
+                    src={`/tiles/${tile.id}.png`}
+                    alt={tile.id}
+                    className={styles.tileImg}
+                  />
+                </button>
+              );
+            })}
           </div>
         </div>
         
