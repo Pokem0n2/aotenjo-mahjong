@@ -4,9 +4,8 @@ import { isAgari, AgariResult } from './agari';
 
 // ========== 牌山状态 ==========
 export interface WallState {
-  tiles: Tile[];           // 36张牌
-  revealed: boolean[];     // 哪些位置是明牌
-  currentIndex: number;    // 当前摸牌位置
+  tiles: Tile[];           // 36张牌（独立于手牌）
+  currentIndex: number;    // 当前摸牌位置（0-35）
 }
 
 // ========== 道具卡定义 ==========
@@ -80,8 +79,8 @@ export interface LevelState {
   level: number;
   targetScore: number;
   currentScore: number;
-  wall: WallState;
-  hand: HandState;
+  wall: WallState;          // 36张牌山
+  hand: HandState;          // 13张手牌 + lastDraw
   itemSlots: ItemSlot[];
   isComplete: boolean;
   lastWinScore: number;     // 最后一次胡牌得分
@@ -98,28 +97,7 @@ export interface GameState {
   message: string;
 }
 
-// ========== 创建牌山 ==========
-export function createWall(): WallState {
-  const fullDeck = createFullDeck();
-  const shuffled = shuffleDeck(fullDeck);
-  
-  const wallTiles = shuffled.slice(0, 36);
-  
-  const revealed = new Array(36).fill(false);
-  const revealedSet = new Set<number>();
-  while (revealedSet.size < 9) {
-    revealedSet.add(Math.floor(Math.random() * 36));
-  }
-  revealedSet.forEach(idx => revealed[idx] = true);
-  
-  return {
-    tiles: wallTiles,
-    revealed,
-    currentIndex: 0
-  };
-}
-
-// ========== 创建完整牌山（136张） ==========
+// ========== 创建完整牌组（136张） ==========
 function createFullDeck(): Tile[] {
   const deck: Tile[] = [];
   for (const id of ALL_TILE_IDS) {
@@ -130,36 +108,114 @@ function createFullDeck(): Tile[] {
   return deck;
 }
 
-// ========== 创建初始手牌 ==========
-export function createInitialHand(wall: WallState): HandState {
-  const handTiles = wall.tiles.slice(0, 13);
-  // 直接修改wall的currentIndex
-  wall.currentIndex = 13;
+// ========== 创建关卡：发13张手牌 + 36张牌山 ==========
+export function createLevel(level: number, itemSlots: ItemSlot[]): LevelState {
+  // 1. 创建136张完整牌组并洗牌
+  const fullDeck = createFullDeck();
+  const shuffled = shuffleDeck(fullDeck);
+  
+  // 2. 先发13张给玩家作为初始手牌
+  const handTiles = shuffled.slice(0, 13);
   const hand = initHand(handTiles);
-  // 设置lastDraw为最后一张手牌，这样checkWin可以正常工作
-  return { ...hand, lastDraw: handTiles[handTiles.length - 1] };
+  
+  // 3. 从剩余牌中抽取36张作为牌山
+  const wallTiles = shuffled.slice(13, 13 + 36);
+  
+  // 4. 牌山初始状态：currentIndex=0，第一张牌（索引0）是"当前要摸的牌"
+  const wall: WallState = {
+    tiles: wallTiles,
+    currentIndex: 0
+  };
+  
+  // 5. 初始摸一张牌到手牌（玩家有14张，需要弃1张）
+  const initialDrawTile = wallTiles[0];
+  const handWithDraw = handDraw(hand, initialDrawTile);
+  
+  // 6. 更新牌山：currentIndex推进到1（第一张已摸走）
+  wall.currentIndex = 1;
+  
+  // 7. 计算目标分数
+  const targetScore = level === 1 ? 2000 : Math.pow(5, level - 1) * 2000;
+  
+  return {
+    level,
+    targetScore,
+    currentScore: 0,
+    wall,
+    hand: handWithDraw,
+    itemSlots: itemSlots.map(slot => ({ ...slot })),
+    isComplete: false,
+    lastWinScore: 0,
+    totalWins: 0
+  };
 }
 
-// ========== 摸牌 ==========
-export function drawFromWall(wall: WallState, hand: HandState): { newHand: HandState; tile: Tile | null; wall: WallState } {
+// ========== 摸牌：从牌山当前位置摸一张到手牌 ==========
+export function drawFromWall(wall: WallState, hand: HandState): { newHand: HandState; tile: Tile | null; newWall: WallState } {
   if (wall.currentIndex >= wall.tiles.length) {
-    return { newHand: hand, tile: null, wall };
+    return { newHand: hand, tile: null, newWall: wall };
   }
   
   const tile = wall.tiles[wall.currentIndex];
-  // 确保创建新的wall对象，避免引用问题
-  const newWall: WallState = { 
-    tiles: wall.tiles, 
-    revealed: wall.revealed, 
-    currentIndex: wall.currentIndex + 1 
+  const newHand = handDraw(hand, tile);
+  const newWall: WallState = {
+    tiles: wall.tiles,
+    currentIndex: wall.currentIndex + 1
   };
   
-  return { newHand: handDraw(hand, tile), tile, wall: newWall };
+  return { newHand, tile, newWall };
+}
+
+// ========== 弃牌：从手牌丢弃一张，然后自动摸新牌 ==========
+export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Tile): { 
+  newHand: HandState; 
+  newWall: WallState; 
+  drawnTile: Tile | null;
+  message: string;
+} {
+  // 1. 丢弃选中的牌
+  const tileIndex = hand.tiles.findIndex(t => t.id === discardTile.id);
+  const discardResult = handDiscard(hand, tileIndex >= 0 ? tileIndex : hand.tiles.length - 1);
+  const handAfterDiscard = discardResult.hand;
+  
+  // 2. 检查是否胡牌（13张牌）
+  const lastDraw = handAfterDiscard.lastDraw;
+  if (lastDraw && handAfterDiscard.tiles.length === 13) {
+    const agariResult = isAgari(handAfterDiscard, lastDraw);
+    if (agariResult.isAgari) {
+      // 胡牌了，不继续摸牌
+      return {
+        newHand: handAfterDiscard,
+        newWall: wall,
+        drawnTile: null,
+        message: `胡牌！`
+      };
+    }
+  }
+  
+  // 3. 从牌山摸一张新牌
+  const drawResult = drawFromWall(wall, handAfterDiscard);
+  
+  if (!drawResult.tile) {
+    // 牌山已空
+    return {
+      newHand: drawResult.newHand,
+      newWall: drawResult.newWall,
+      drawnTile: null,
+      message: '牌山已空！'
+    };
+  }
+  
+  return {
+    newHand: drawResult.newHand,
+    newWall: drawResult.newWall,
+    drawnTile: drawResult.tile,
+    message: `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}，请选择一张牌丢弃`
+  };
 }
 
 // ========== 判断胡牌 ==========
 export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean; pattern: string; fan: number; score: number } {
-  // 优先使用传入的winningTile，否则使用hand.lastDraw
   const lastTile = winningTile || hand.lastDraw;
   if (!lastTile || hand.tiles.length !== 14) {
     return { isWin: false, pattern: '', fan: 0, score: 0 };
@@ -330,27 +386,6 @@ export function applyItemEffects(
   }
   
   return { finalScore: Math.floor(score), details, universalTiles };
-}
-
-// ========== 创建关卡 ==========
-export function createLevel(level: number, itemSlots: ItemSlot[]): LevelState {
-  const wall = createWall();
-  const hand = createInitialHand(wall);
-  
-  // 第一关2000分，之后每关5倍
-  const targetScore = level === 1 ? 2000 : Math.pow(5, level - 1) * 2000;
-  
-  return {
-    level,
-    targetScore,
-    currentScore: 0,
-    wall,
-    hand,
-    itemSlots: itemSlots.map(slot => ({ ...slot })),
-    isComplete: false,
-    lastWinScore: 0,
-    totalWins: 0
-  };
 }
 
 // ========== 创建初始游戏状态 ==========

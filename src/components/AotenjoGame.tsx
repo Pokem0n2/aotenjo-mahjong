@@ -4,11 +4,10 @@ import {
   GameState, LevelState, ItemCard, ItemSlot,
   createGameState, createLevel, generateShopChoices,
   addItemCard, updateItemsAfterLevel, updateItemsAfterWin,
-  drawFromWall, checkWin, calculateBaseScore, applyItemEffects,
-  tileToId
+  discardAndDraw, checkWin, calculateBaseScore, applyItemEffects,
+  tileToId, drawFromWall
 } from '../engine/aotenjo';
-import { Tile } from '../types/tile';
-import { handDiscard } from '../engine/hand';
+import { Tile, TILE_NAMES } from '../types/tile';
 
 // ========== 游戏画面类型 ==========
 type Screen = 'title' | 'shop' | 'game' | 'result';
@@ -17,14 +16,12 @@ export default function AotenjoGame() {
   const [screen, setScreen] = useState<Screen>('title');
   const [gameState, setGameState] = useState<GameState>(createGameState());
   const [levelState, setLevelState] = useState<LevelState | null>(null);
-  const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [message, setMessage] = useState('');
   const [scoreDetails, setScoreDetails] = useState<string[]>([]);
   const [scorePopup, setScorePopup] = useState<{ score: number; visible: boolean }>({ score: 0, visible: false });
   const [winEffect, setWinEffect] = useState<{ pattern: string; visible: boolean }>({ pattern: '', visible: false });
   const [shopSlotIndex, setShopSlotIndex] = useState<number | null>(null);
   const [animating, setAnimating] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
   
   // 使用ref来避免闭包问题
   const levelRef = useRef<LevelState | null>(null);
@@ -104,55 +101,8 @@ export default function AotenjoGame() {
     setLevelState(levelData);
     levelRef.current = levelData;
     setScreen('game');
-    setMessage(`第 ${level} 关 - 目标: ${levelData.targetScore}分`);
+    setMessage(`第 ${level} 关 - 目标: ${levelData.targetScore}分 | 已自动摸入${levelData.hand.lastDraw ? TILE_NAMES[levelData.hand.lastDraw.id as import('../types/tile').TileId] : ''}，请选择一张牌丢弃`);
     setScoreDetails([]);
-    setSelectedTile(null);
-    
-    // 自动摸第一张牌
-    setTimeout(() => {
-      autoDraw(levelData);
-    }, 800);
-  }, []);
-
-  // ========== 自动摸牌 ==========
-  const autoDraw = useCallback((currentLevel: LevelState) => {
-    const { newHand, tile, wall } = drawFromWall(currentLevel.wall, currentLevel.hand);
-    
-    if (!tile) {
-      // 牌山已空，检查是否过关
-      checkLevelComplete({ ...currentLevel, wall });
-      return;
-    }
-    
-    // 创建新的关卡状态
-    const newLevel: LevelState = { 
-      ...currentLevel, 
-      hand: newHand, 
-      wall: {
-        ...wall,
-        currentIndex: wall.currentIndex // 确保currentIndex被正确复制
-      }
-    };
-    
-    // 使用函数式更新确保状态正确
-    setLevelState(prev => {
-      if (!prev) return newLevel;
-      return { ...prev, hand: newHand, wall: { ...wall, currentIndex: wall.currentIndex } };
-    });
-    levelRef.current = newLevel;
-    
-    // 强制触发重新渲染
-    setForceUpdate(prev => prev + 1);
-    
-    // 检查是否胡牌（使用刚摸到的tile作为winningTile）
-    const winResult = checkWin(newHand, tile);
-    if (winResult.isWin) {
-      setAnimating(false);
-      handleWin(newLevel, winResult.pattern, winResult.fan, winResult.score);
-    } else {
-      setAnimating(false);
-      setMessage(`摸到 ${tile.id}，请选择一张牌丢弃`);
-    }
   }, []);
 
   // ========== 处理胡牌 ==========
@@ -197,8 +147,40 @@ export default function AotenjoGame() {
     } else {
       // 继续自动摸牌
       setTimeout(() => {
-        autoDraw(newLevel);
+        const latestLevel = levelRef.current;
+        if (latestLevel) {
+          autoDrawAfterWin(latestLevel);
+        }
       }, 1200);
+    }
+  }, []);
+
+  // ========== 胡牌后继续自动摸牌 ==========
+  const autoDrawAfterWin = useCallback((currentLevel: LevelState) => {
+    const { newHand, tile, newWall } = drawFromWall(currentLevel.wall, currentLevel.hand);
+    
+    if (!tile) {
+      // 牌山已空
+      checkLevelComplete({ ...currentLevel, wall: newWall, hand: newHand });
+      return;
+    }
+    
+    const newLevel: LevelState = {
+      ...currentLevel,
+      hand: newHand,
+      wall: newWall
+    };
+    
+    setLevelState(newLevel);
+    levelRef.current = newLevel;
+    
+    // 检查是否胡牌
+    const winResult = checkWin(newHand, tile);
+    if (winResult.isWin) {
+      handleWin(newLevel, winResult.pattern, winResult.fan, winResult.score);
+    } else {
+      setAnimating(false);
+        setMessage(`摸到 ${tile ? TILE_NAMES[tile.id as import('../types/tile').TileId] : ''}，请选择一张牌丢弃`);
     }
   }, []);
 
@@ -239,36 +221,41 @@ export default function AotenjoGame() {
     if (!levelState || animating) return;
     
     setAnimating(true);
-    setSelectedTile(null);
     
-    // 使用handDiscard正确移除牌
-    const tileIndex = levelState.hand.tiles.findIndex(t => t.id === tile.id);
-    if (tileIndex === -1) {
-      setAnimating(false);
-      return;
-    }
+    // 调用discardAndDraw：丢弃牌 + 自动摸新牌
+    const result = discardAndDraw(levelState.wall, levelState.hand, tile);
     
-    const { hand: newHand } = handDiscard(levelState.hand, tileIndex);
+    // 更新关卡状态
+    const newLevel: LevelState = {
+      ...levelState,
+      hand: result.newHand,
+      wall: result.newWall
+    };
     
-    // 重要：先更新状态，再调用autoDraw
-    const newLevel = { ...levelState, hand: newHand };
+    setLevelState(newLevel);
+    levelRef.current = newLevel;
     
-    // 使用函数式更新确保状态同步
-    setLevelState(prev => {
-      if (!prev) return prev;
-      const updatedLevel = { ...prev, hand: newHand };
-      levelRef.current = updatedLevel;
-      return updatedLevel;
-    });
-    
-    // 自动摸下一张（使用ref中的最新状态）
-    setTimeout(() => {
-      const latestLevel = levelRef.current;
-      if (latestLevel) {
-        autoDraw(latestLevel);
+    if (result.drawnTile) {
+      // 摸到新牌，检查是否胡牌
+      const winResult = checkWin(result.newHand, result.drawnTile);
+      if (winResult.isWin) {
+        handleWin(newLevel, winResult.pattern, winResult.fan, winResult.score);
+      } else {
+        setAnimating(false);
+        setMessage(result.message);
       }
-    }, 300);
-  }, [levelState, animating, autoDraw]);
+    } else {
+      // 牌山已空或胡牌了
+      setAnimating(false);
+      setMessage(result.message);
+      
+      if (result.message === '牌山已空！') {
+        setTimeout(() => {
+          checkLevelComplete(newLevel);
+        }, 1000);
+      }
+    }
+  }, [levelState, animating]);
 
   // ========== 继续下一关 ==========
   const nextLevel = useCallback(() => {
@@ -285,7 +272,6 @@ export default function AotenjoGame() {
     setScreen('title');
     setMessage('');
     setScoreDetails([]);
-    setSelectedTile(null);
     setAnimating(false);
   }, []);
 
@@ -299,10 +285,11 @@ export default function AotenjoGame() {
       </button>
       <div className={styles.rules}>
         <h3>游戏规则</h3>
-        <p>1. 从牌山中自动摸牌，组成胡牌牌型</p>
-        <p>2. 胡牌得分 = 牌面分数总和 × 番数 × 道具卡效果</p>
-        <p>3. 8个道具卡槽位，合理搭配Build</p>
-        <p>4. 每关需要达到目标分数才能过关</p>
+        <p>1. 每关从完整日麻牌组中发13张手牌</p>
+        <p>2. 36张独立牌山，自动从左到右依次摸牌</p>
+        <p>3. 当前要摸的牌在牌山中明牌展示（黄色高亮）</p>
+        <p>4. 弃牌后该位置变空白，下一张变为高亮</p>
+        <p>5. 胡牌得分 = 牌面分数总和 × 番数 × 道具卡效果</p>
       </div>
     </div>
   );
@@ -358,6 +345,9 @@ export default function AotenjoGame() {
   const renderGame = () => {
     if (!levelState) return null;
     
+    const wall = levelState.wall;
+    const currentDrawIndex = wall.currentIndex; // 当前要摸的牌位置
+    
     return (
       <div className={styles.gameScreen}>
         {/* 顶部信息栏 */}
@@ -386,32 +376,38 @@ export default function AotenjoGame() {
           ))}
         </div>
         
-        {/* 牌山 - 4×9阵列，摸牌后保留空白占位框 */}
+        {/* 牌山 - 9×4阵列 */}
         <div className={styles.wallSection}>
-          <h3>牌山 ({levelState.wall.currentIndex}/{levelState.wall.tiles.length})</h3>
+          <h3>牌山 ({wall.currentIndex}/{wall.tiles.length})</h3>
           <div className={styles.wallGrid}>
             {Array.from({ length: 36 }, (_, index) => {
-              const tile = levelState.wall.tiles[index];
-              const isDrawn = index < levelState.wall.currentIndex;
-              const isRevealed = levelState.wall.revealed[index];
+              const tile = wall.tiles[index];
+              const isDrawn = index < wall.currentIndex; // 已摸走的牌
+              const isCurrent = index === wall.currentIndex; // 当前要摸的牌（黄色高亮）
+              const isFuture = index > wall.currentIndex; // 未摸的牌
               
               return (
                 <div
                   key={index}
                   className={`${styles.wallTile} ${
                     isDrawn ? styles.drawn : ''
-                  } ${isRevealed ? styles.revealed : ''}`}
+                  } ${isCurrent ? styles.currentHighlight : ''} ${
+                    isFuture ? styles.future : ''
+                  }`}
                 >
-                  {tile && (isRevealed || isDrawn) ? (
+                  {isDrawn ? (
+                    // 已摸走的牌：空白占位框
+                    <div className={styles.emptyTile}></div>
+                  ) : isCurrent ? (
+                    // 当前要摸的牌：明牌展示 + 黄色高亮
                     <img
                       src={`/tiles/${tile.id}.png`}
                       alt={tile.id}
                       className={styles.tileImg}
                     />
-                  ) : tile ? (
-                    <div className={styles.hiddenTile}>?</div>
                   ) : (
-                    <div className={styles.emptyTile}></div>
+                    // 未摸的牌：暗牌"?"
+                    <div className={styles.hiddenTile}>?</div>
                   )}
                 </div>
               );
