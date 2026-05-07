@@ -260,7 +260,10 @@ export default function AotenjoGame() {
     setLevelState(newLevel);
     levelRef.current = newLevel;
     
-    if (result.drawnTile) {
+    if (result.isWin && result.winPattern && result.winScore) {
+      // 胡牌了（包括最后一张牌的情况）
+      handleWin(newLevel, result.winPattern, 0, result.winScore);
+    } else if (result.drawnTile) {
       // 摸到新牌，检查是否胡牌
       const winResult = checkWin(result.newHand, result.drawnTile);
       if (winResult.isWin) {
@@ -270,7 +273,7 @@ export default function AotenjoGame() {
         setMessage(result.message);
       }
     } else {
-      // 牌山已空或胡牌了
+      // 牌山已空
       setAnimating(false);
       setMessage(result.message);
       

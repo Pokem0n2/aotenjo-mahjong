@@ -183,6 +183,9 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   newWall: WallState; 
   drawnTile: Tile | null;
   message: string;
+  isWin: boolean;
+  winPattern?: string;
+  winScore?: number;
 } {
   // 1. 丢弃选中的牌
   const tileIndex = hand.tiles.findIndex(t => t.id === discardTile.id);
@@ -195,11 +198,17 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     const agariResult = isAgari(handAfterDiscard, lastDraw);
     if (agariResult.isAgari) {
       // 胡牌了，不继续摸牌
+      const pattern = getPatternName(agariResult.form);
+      const fan = calculateFan(pattern, handAfterDiscard);
+      const baseScore = calculateBaseScore(handAfterDiscard);
       return {
         newHand: handAfterDiscard,
         newWall: wall,
         drawnTile: null,
-        message: `胡牌！`
+        message: `胡牌！${pattern}`,
+        isWin: true,
+        winPattern: pattern,
+        winScore: baseScore * fan
       };
     }
   }
@@ -213,7 +222,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
       newHand: drawResult.newHand,
       newWall: drawResult.newWall,
       drawnTile: null,
-      message: '牌山已空！'
+      message: '牌山已空！',
+      isWin: false
     };
   }
   
@@ -221,7 +231,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     newHand: drawResult.newHand,
     newWall: drawResult.newWall,
     drawnTile: drawResult.tile,
-    message: `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}，请选择一张牌丢弃`
+    message: `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}，请选择一张牌丢弃`,
+    isWin: false
   };
 }
 
