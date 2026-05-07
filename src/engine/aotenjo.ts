@@ -1,6 +1,6 @@
-import { Tile, TileId, Suit, ALL_TILE_IDS, createTile, shuffleDeck, handToCounts, TILE_NAMES } from '../types/tile';
+import { Tile, TileId, Suit, ALL_TILE_IDS, createTile, shuffleDeck, handToCounts, TILE_NAMES, UNIVERSAL_TILE_ID, createUniversalTile } from '../types/tile';
 import { HandState, createHand, initHand, handDraw, handDiscard } from './hand';
-import { isAgari, AgariResult } from './agari';
+import { isAgari, AgariResult, findBestAgariWithUniversal } from './agari';
 
 // ========== 牌山状态 ==========
 export interface WallState {
@@ -109,20 +109,48 @@ function createFullDeck(): Tile[] {
   return deck;
 }
 
+// ========== 检查是否有万象天引道具 ==========
+function hasWuxiangTianyin(itemSlots: ItemSlot[]): boolean {
+  return itemSlots.some(slot => slot.card?.id === 'wuxiang');
+}
+
 // ========== 创建关卡：发13张手牌 + 36张牌山 ==========
 export function createLevel(level: number, itemSlots: ItemSlot[]): LevelState {
   // 1. 创建136张完整牌组并洗牌
   const fullDeck = createFullDeck();
   const shuffled = shuffleDeck(fullDeck);
   
-  // 2. 先发13张给玩家作为初始手牌
-  const handTiles = shuffled.slice(0, 13);
-  const hand = initHand(handTiles);
+  // 2. 检查是否有万象天引
+  const hasUniversal = hasWuxiangTianyin(itemSlots);
   
-  // 3. 从剩余牌中抽取36张作为牌山
-  const wallTiles = shuffled.slice(13, 13 + 36);
+  // 3. 发初始手牌
+  let handTiles: Tile[];
+  if (hasUniversal) {
+    // 有万象天引：12张常规牌 + 1张万能牌（放在最前面）
+    const regularTiles = shuffled.slice(0, 12);
+    const universalTile = createUniversalTile('5z');
+    handTiles = [universalTile, ...regularTiles];
+  } else {
+    // 无万象天引：13张常规牌
+    handTiles = shuffled.slice(0, 13);
+  }
+  let hand = initHand(handTiles);
   
-  // 4. 随机选择9个位置作为明牌
+  // 如果有万能牌，确保它在最前面（索引0）
+  if (hasUniversal) {
+    const universalIdx = hand.tiles.findIndex(t => t.id === 'universal');
+    if (universalIdx >= 0) {
+      const newTiles = [...hand.tiles];
+      const [universalTile] = newTiles.splice(universalIdx, 1);
+      newTiles.unshift(universalTile);
+      hand = { ...hand, tiles: newTiles };
+    }
+  }
+  
+  // 4. 从剩余牌中抽取36张作为牌山
+  const wallTiles = shuffled.slice(hasUniversal ? 12 : 13, hasUniversal ? 12 + 36 : 13 + 36);
+  
+  // 5. 随机选择9个位置作为明牌
   const revealed = new Array(36).fill(false);
   const revealedSet = new Set<number>();
   while (revealedSet.size < 9) {
@@ -130,21 +158,32 @@ export function createLevel(level: number, itemSlots: ItemSlot[]): LevelState {
   }
   revealedSet.forEach(idx => revealed[idx] = true);
   
-  // 5. 牌山初始状态
+  // 6. 牌山初始状态
   const wall: WallState = {
     tiles: wallTiles,
     revealed,
     currentIndex: 0
   };
   
-  // 6. 初始摸一张牌到手牌（玩家有14张，需要弃1张）
+  // 7. 初始摸一张牌到手牌（玩家有14张，需要弃1张）
   const initialDrawTile = wallTiles[0];
-  const handWithDraw = handDraw(hand, initialDrawTile);
+  let handWithDraw = handDraw(hand, initialDrawTile);
   
-  // 7. 更新牌山：currentIndex推进到1（第一张已摸走）
+  // 如果有万能牌，再次确保它在最前面（handDraw会排序）
+  if (hasUniversal) {
+    const universalIdx = handWithDraw.tiles.findIndex(t => t.id === 'universal');
+    if (universalIdx >= 0) {
+      const newTiles = [...handWithDraw.tiles];
+      const [universalTile] = newTiles.splice(universalIdx, 1);
+      newTiles.unshift(universalTile);
+      handWithDraw = { ...handWithDraw, tiles: newTiles };
+    }
+  }
+  
+  // 8. 更新牌山：currentIndex推进到1（第一张已摸走）
   wall.currentIndex = 1;
   
-  // 8. 计算目标分数
+  // 9. 计算目标分数
   const targetScore = level === 1 ? 2000 : Math.pow(5, level - 1) * 2000;
   
   return {
@@ -202,29 +241,50 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   const finalLastDraw = finalHand.lastDraw;
   
   if (finalLastDraw && finalHand.tiles.length === 14) {
-    // 创建13张牌的tempHand用于胡牌判定
-    const tilesWithoutLast = finalHand.tiles.filter(t => t.id !== finalLastDraw.id);
-    const tempHand = { 
-      ...finalHand, 
-      tiles: tilesWithoutLast.length === 13 ? tilesWithoutLast : finalHand.tiles.slice(0, -1)
-    };
-    const agariResult = isAgari(tempHand, finalLastDraw);
+    // 检查是否有万能牌
+    const hasUniversal = finalHand.tiles.some(t => t.id === UNIVERSAL_TILE_ID);
     
-    if (agariResult.isAgari) {
-      const pattern = getPatternName(agariResult.form);
-      const fan = calculateFan(pattern, tempHand);
+    let agariResult: AgariResult | null = null;
+    let bestPattern = '';
+    let bestFan = 0;
+    
+    if (hasUniversal) {
+      // 有万能牌：遍历34种可能，找最大番数
+      const bestResult = findBestAgariWithUniversal(finalHand, finalLastDraw);
+      if (bestResult.result) {
+        agariResult = bestResult.result;
+        bestPattern = getPatternName(bestResult.result.form);
+        bestFan = bestResult.bestFan;
+      }
+    } else {
+      // 无万能牌：常规胡牌判定
+      // 创建13张牌的tempHand用于胡牌判定
+      const tilesWithoutLast = finalHand.tiles.filter(t => t.id !== finalLastDraw.id);
+      const tempHand = { 
+        ...finalHand, 
+        tiles: tilesWithoutLast.length === 13 ? tilesWithoutLast : finalHand.tiles.slice(0, -1)
+      };
+      const result = isAgari(tempHand, finalLastDraw);
+      if (result.isAgari) {
+        agariResult = result;
+        bestPattern = getPatternName(result.form);
+        bestFan = calculateFan(bestPattern, tempHand);
+      }
+    }
+    
+    if (agariResult) {
       const baseScore = calculateBaseScore(finalHand);
-      const score = baseScore * fan;
+      const score = baseScore * bestFan;
       // 检查牌山是否已空
       const wallEmpty = drawResult.newWall.currentIndex >= drawResult.newWall.tiles.length;
       return {
         newHand: finalHand,
         newWall: drawResult.newWall,
         drawnTile: null,
-        message: `胡牌！${pattern} ${fan}番 ${score}分`,
+        message: `胡牌！${bestPattern} ${bestFan}番 ${score}分`,
         isWin: true,
-        winPattern: pattern,
-        winFan: fan,
+        winPattern: bestPattern,
+        winFan: bestFan,
         winScore: score,
         isWallEmpty: wallEmpty
       };
@@ -516,7 +576,16 @@ export function createGameState(): GameState {
 // ========== 生成商店选项 ==========
 export function generateShopChoices(): ItemCard[] {
   const shuffled = [...ITEM_CARDS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 3);
+  const choices = shuffled.slice(0, 3);
+  // 确保万象天引总是出现（用于测试）
+  const hasWuxiang = choices.some(c => c.id === 'wuxiang');
+  if (!hasWuxiang) {
+    const wuxiang = ITEM_CARDS.find(c => c.id === 'wuxiang');
+    if (wuxiang) {
+      choices[2] = wuxiang; // 替换第三个
+    }
+  }
+  return choices;
 }
 
 // ========== 添加道具卡到槽位 ==========

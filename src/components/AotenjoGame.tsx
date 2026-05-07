@@ -492,24 +492,29 @@ export default function AotenjoGame() {
                 }
               }
               const isLastDraw = index === lastDrawIndex;
+              const isUniversal = tile.id === 'universal';
               
               return (
                 <button
                   key={index}
-                  className={`${styles.handTile} ${isLastDraw ? styles.lastDrawHighlight : ''} ${animating ? styles.disabled : ''}`}
+                  className={`${styles.handTile} ${isLastDraw ? styles.lastDrawHighlight : ''} ${isUniversal ? styles.universalTile : ''} ${animating ? styles.disabled : ''}`}
                   onClick={() => {
-                    if (!animating) {
+                    if (!animating && !isUniversal) {
                       discardTile(tile);
                     }
                   }}
-                  disabled={animating}
-                  title={isLastDraw ? "刚摸到的牌，点击丢弃" : "点击丢弃此牌"}
+                  disabled={animating || isUniversal}
+                  title={isUniversal ? "万象天引-万能牌（不可丢弃）" : isLastDraw ? "刚摸到的牌，点击丢弃" : "点击丢弃此牌"}
                 >
-                  <img
-                    src={`/tiles/${tile.id}.png`}
-                    alt={tile.id}
-                    className={styles.tileImg}
-                  />
+                  {isUniversal ? (
+                    <div className={styles.universalIcon}>?</div>
+                  ) : (
+                    <img
+                      src={`/tiles/${tile.id}.png`}
+                      alt={tile.id}
+                      className={styles.tileImg}
+                    />
+                  )}
                 </button>
               );
             })}

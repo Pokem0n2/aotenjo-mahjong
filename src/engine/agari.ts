@@ -411,3 +411,46 @@ export function formatAgari(result: AgariResult): string {
 
   return parts.join(' | ');
 }
+
+/**
+ * 万能牌最大番数搜索
+ * 遍历34种牌，找到万能牌作为哪种牌时胡牌番数最大
+ * 返回最佳胡牌结果和万能牌应扮演的牌ID
+ */
+export function findBestAgariWithUniversal(
+  hand: HandState,
+  winningTile: Tile
+): { result: AgariResult | null; bestTileId: TileId | null; bestFan: number } {
+  let bestResult: AgariResult | null = null;
+  let bestTileId: TileId | null = null;
+  let bestFan = 0;
+
+  // 遍历34种牌，测试万能牌作为每种牌的情况
+  for (const tileId of ALL_TILE_IDS) {
+    // 创建临时手牌：将万能牌替换为当前测试的牌
+    const tempTiles = hand.tiles.map(t =>
+      t.id === 'universal' ? makeTile(ALL_TILE_IDS.indexOf(tileId)) : t
+    );
+    const tempHand: HandState = {
+      ...hand,
+      tiles: tempTiles,
+    };
+
+    const result = isAgari(tempHand, winningTile);
+    if (result.isAgari) {
+      // 计算番数（简化：根据牌型估算）
+      let fan = 1;
+      if (result.form === 'chiitoitsu') fan = 2;
+      if (result.form === 'kokushi') fan = 13;
+      // TODO: 更精确的番数计算
+
+      if (fan > bestFan) {
+        bestFan = fan;
+        bestResult = result;
+        bestTileId = tileId;
+      }
+    }
+  }
+
+  return { result: bestResult, bestTileId, bestFan };
+}
