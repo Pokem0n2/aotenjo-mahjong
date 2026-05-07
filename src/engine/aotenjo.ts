@@ -183,9 +183,10 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   newWall: WallState; 
   drawnTile: Tile | null;
   message: string;
-  isWin: boolean;
-  winPattern?: string;
-  winScore?: number;
+  isWin: boolean;  // 是否胡牌
+  winPattern: string;
+  winFan: number;
+  winScore: number;
 } {
   // 1. 丢弃选中的牌
   const tileIndex = hand.tiles.findIndex(t => t.id === discardTile.id);
@@ -197,18 +198,20 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   if (lastDraw && handAfterDiscard.tiles.length === 13) {
     const agariResult = isAgari(handAfterDiscard, lastDraw);
     if (agariResult.isAgari) {
-      // 胡牌了，不继续摸牌
       const pattern = getPatternName(agariResult.form);
       const fan = calculateFan(pattern, handAfterDiscard);
       const baseScore = calculateBaseScore(handAfterDiscard);
+      const score = baseScore * fan;
+      // 胡牌了，不继续摸牌
       return {
         newHand: handAfterDiscard,
         newWall: wall,
         drawnTile: null,
-        message: `胡牌！${pattern}`,
+        message: `胡牌！${pattern} ${fan}番 ${score}分`,
         isWin: true,
         winPattern: pattern,
-        winScore: baseScore * fan
+        winFan: fan,
+        winScore: score
       };
     }
   }
@@ -217,13 +220,44 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   const drawResult = drawFromWall(wall, handAfterDiscard);
   
   if (!drawResult.tile) {
-    // 牌山已空
+    // 牌山已空（最后一张牌摸入后）
+    // 检查摸入最后一张后的手牌是否胡牌
+    const finalHand = drawResult.newHand;
+    const finalLastDraw = finalHand.lastDraw;
+    if (finalLastDraw && finalHand.tiles.length === 14) {
+      const tilesWithoutLast = finalHand.tiles.filter(t => t.id !== finalLastDraw.id);
+      const tempHand = { 
+        ...finalHand, 
+        tiles: tilesWithoutLast.length === 13 ? tilesWithoutLast : finalHand.tiles.slice(0, -1)
+      };
+      const agariResult = isAgari(tempHand, finalLastDraw);
+      if (agariResult.isAgari) {
+        const pattern = getPatternName(agariResult.form);
+        const fan = calculateFan(pattern, tempHand);
+        const baseScore = calculateBaseScore(finalHand);
+        const score = baseScore * fan;
+        return {
+          newHand: finalHand,
+          newWall: drawResult.newWall,
+          drawnTile: null,
+          message: `牌山最后一张胡牌！${pattern} ${fan}番 ${score}分`,
+          isWin: true,
+          winPattern: pattern,
+          winFan: fan,
+          winScore: score
+        };
+      }
+    }
+    // 没胡牌，牌山已空
     return {
       newHand: drawResult.newHand,
       newWall: drawResult.newWall,
       drawnTile: null,
       message: '牌山已空！',
-      isWin: false
+      isWin: false,
+      winPattern: '',
+      winFan: 0,
+      winScore: 0
     };
   }
   
@@ -232,7 +266,10 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     newWall: drawResult.newWall,
     drawnTile: drawResult.tile,
     message: `摸到 ${TILE_NAMES[drawResult.tile.id as TileId]}，请选择一张牌丢弃`,
-    isWin: false
+    isWin: false,
+    winPattern: '',
+    winFan: 0,
+    winScore: 0
   };
 }
 

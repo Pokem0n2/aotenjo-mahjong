@@ -260,28 +260,39 @@ export default function AotenjoGame() {
     setLevelState(newLevel);
     levelRef.current = newLevel;
     
-    if (result.isWin && result.winPattern && result.winScore) {
-      // 胡牌了（包括最后一张牌的情况）
-      handleWin(newLevel, result.winPattern, 0, result.winScore);
-    } else if (result.drawnTile) {
-      // 摸到新牌，检查是否胡牌
-      const winResult = checkWin(result.newHand, result.drawnTile);
-      if (winResult.isWin) {
-        handleWin(newLevel, winResult.pattern, winResult.fan, winResult.score);
-      } else {
-        setAnimating(false);
-        setMessage(result.message);
-      }
-    } else {
-      // 牌山已空
-      setAnimating(false);
+    if (result.isWin) {
+      // 胡牌了（正常弃牌后胡牌，或牌山最后一张胡牌）
+      // 累加得分到关卡总分
+      const updatedLevel: LevelState = {
+        ...newLevel,
+        currentScore: newLevel.currentScore + result.winScore
+      };
+      setLevelState(updatedLevel);
+      levelRef.current = updatedLevel;
+      
+      // 显示胡牌效果
+      setWinEffect({ pattern: result.winPattern, visible: true });
+      setScorePopup({ score: result.winScore, visible: true });
+      setScoreDetails(prev => [...prev, `${result.winPattern} ${result.winFan}番 +${result.winScore}分`]);
       setMessage(result.message);
       
-      if (result.message === '牌山已空！') {
-        setTimeout(() => {
-          checkLevelComplete(newLevel);
-        }, 1000);
-      }
+      // 1秒后自动进入结算
+      setTimeout(() => {
+        setWinEffect({ pattern: '', visible: false });
+        setScorePopup({ score: 0, visible: false });
+        checkLevelComplete(updatedLevel);
+      }, 1500);
+    } else if (!result.drawnTile) {
+      // 牌山已空，没胡牌，直接进入结算（用已累计的总分判断）
+      setAnimating(false);
+      setMessage(result.message);
+      setTimeout(() => {
+        checkLevelComplete(newLevel);
+      }, 1000);
+    } else {
+      // 正常摸到新牌，继续游戏
+      setAnimating(false);
+      setMessage(result.message);
     }
   }, [levelState, animating]);
 
