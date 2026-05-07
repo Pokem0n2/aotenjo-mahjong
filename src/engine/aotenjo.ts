@@ -115,7 +115,7 @@ function hasWuxiangTianyin(itemSlots: ItemSlot[]): boolean {
 }
 
 // ========== 创建关卡：发13张手牌 + 36张牌山 ==========
-export function createLevel(level: number, itemSlots: ItemSlot[]): LevelState {
+export function createLevel(level: number, itemSlots: ItemSlot[], cheatMode: boolean = false): LevelState {
   // 1. 创建136张完整牌组并洗牌
   const fullDeck = createFullDeck();
   const shuffled = shuffleDeck(fullDeck);
@@ -150,13 +150,20 @@ export function createLevel(level: number, itemSlots: ItemSlot[]): LevelState {
   // 4. 从剩余牌中抽取36张作为牌山
   const wallTiles = shuffled.slice(hasUniversal ? 12 : 13, hasUniversal ? 12 + 36 : 13 + 36);
   
-  // 5. 随机选择9个位置作为明牌
+  // 5. 随机选择9个位置作为明牌（作弊模式下全部明牌）
   const revealed = new Array(36).fill(false);
-  const revealedSet = new Set<number>();
-  while (revealedSet.size < 9) {
-    revealedSet.add(Math.floor(Math.random() * 36));
+  if (cheatMode) {
+    // 作弊模式：所有牌都明牌
+    for (let i = 0; i < 36; i++) {
+      revealed[i] = true;
+    }
+  } else {
+    const revealedSet = new Set<number>();
+    while (revealedSet.size < 9) {
+      revealedSet.add(Math.floor(Math.random() * 36));
+    }
+    revealedSet.forEach(idx => revealed[idx] = true);
   }
-  revealedSet.forEach(idx => revealed[idx] = true);
   
   // 6. 牌山初始状态
   const wall: WallState = {

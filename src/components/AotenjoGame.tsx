@@ -12,7 +12,11 @@ import { Tile, TILE_NAMES } from '../types/tile';
 // ========== 游戏画面类型 ==========
 type Screen = 'title' | 'shop' | 'game' | 'result';
 
-export default function AotenjoGame() {
+interface AotenjoGameProps {
+  cheatMode?: boolean;
+}
+
+export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const [screen, setScreen] = useState<Screen>('title');
   const [gameState, setGameState] = useState<GameState>(createGameState());
   const [levelState, setLevelState] = useState<LevelState | null>(null);
@@ -97,7 +101,7 @@ export default function AotenjoGame() {
 
   // ========== 开始关卡 ==========
   const startLevel = useCallback((level: number, itemSlots: ItemSlot[]) => {
-    const levelData = createLevel(level, itemSlots);
+    const levelData = createLevel(level, itemSlots, cheatMode);
     setLevelState(levelData);
     levelRef.current = levelData;
     setScreen('game');
