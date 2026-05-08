@@ -303,12 +303,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         }
       }, 1500);
     } else if (result.isWallEmpty) {
-      // 牌山已空，没胡牌，直接进入结算
+      // 牌山已空，没胡牌，让玩家手动选择丢弃一张牌后再结算
       setAnimating(false);
       setMessage(result.message);
-      setTimeout(() => {
-        checkLevelComplete(newLevel);
-      }, 1000);
     } else {
       // 正常摸到新牌，继续游戏
       // 检查新摸的牌是否触发万能牌胡牌（已在discardAndDraw中处理）

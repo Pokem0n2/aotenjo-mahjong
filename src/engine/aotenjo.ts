@@ -307,12 +307,12 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   const isWallEmpty = drawResult.newWall.currentIndex >= drawResult.newWall.tiles.length;
   
   if (isWallEmpty) {
-    // 没胡牌，牌山已空，直接结算
+    // 没胡牌，牌山已空，让玩家手动选择丢弃最后一张牌后再结算
     return {
       newHand: drawResult.newHand,
       newWall: drawResult.newWall,
       drawnTile: null,
-      message: '牌山已空！',
+      message: '牌山已空！请丢弃一张手牌进行最终结算',
       isWin: false,
       winPattern: '',
       winFan: 0,
