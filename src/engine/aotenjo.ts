@@ -234,6 +234,7 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
   winFan: number;
   winScore: number;
   isWallEmpty: boolean; // 牌山是否已空
+  universalDisplayTile: TileId | null; // 万能牌临时显示的牌ID（胡牌时）
 } {
   // 1. 丢弃选中的牌
   const tileIndex = hand.tiles.findIndex(t => t.id === discardTile.id);
@@ -255,6 +256,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     let bestPattern = '';
     let bestFan = 0;
     
+    let bestTileId: TileId | null = null;
+    
     if (hasUniversal) {
       // 有万能牌：遍历34种可能，找最大番数
       const bestResult = findBestAgariWithUniversal(finalHand, finalLastDraw);
@@ -262,6 +265,7 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
         agariResult = bestResult.result;
         bestPattern = getPatternName(bestResult.result.form);
         bestFan = bestResult.bestFan;
+        bestTileId = bestResult.bestTileId;
       }
     } else {
       // 无万能牌：常规胡牌判定
@@ -293,7 +297,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
         winPattern: bestPattern,
         winFan: bestFan,
         winScore: score,
-        isWallEmpty: wallEmpty
+        isWallEmpty: wallEmpty,
+        universalDisplayTile: bestTileId
       };
     }
   }
@@ -312,7 +317,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
       winPattern: '',
       winFan: 0,
       winScore: 0,
-      isWallEmpty: true
+      isWallEmpty: true,
+      universalDisplayTile: null
     };
   }
   
@@ -326,7 +332,8 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     winPattern: '',
     winFan: 0,
     winScore: 0,
-    isWallEmpty: false
+    isWallEmpty: false,
+    universalDisplayTile: null
   };
 }
 

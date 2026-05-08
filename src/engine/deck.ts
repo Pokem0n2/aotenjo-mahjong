@@ -130,7 +130,12 @@ export function remainingTiles(deck: DeckState): number {
 export function sortTiles(tiles: Tile[]): void {
   const order: Record<string, number> = {};
   ALL_TILE_IDS.forEach((id, i) => order[id] = i);
-  tiles.sort((a, b) => (order[a.id] ?? 99) - (order[b.id] ?? 99));
+  tiles.sort((a, b) => {
+    // 万能牌（id: 'universal'）永远排在最前面
+    if (a.id === 'universal') return -1;
+    if (b.id === 'universal') return 1;
+    return (order[a.id] ?? 99) - (order[b.id] ?? 99);
+  });
 }
 
 /** 获取宝牌列表 */

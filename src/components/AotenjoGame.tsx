@@ -7,7 +7,7 @@ import {
   discardAndDraw, checkWin, calculateBaseScore, applyItemEffects,
   tileToId, drawFromWall, autoDiscardAfterWin
 } from '../engine/aotenjo';
-import { Tile, TILE_NAMES } from '../types/tile';
+import { Tile, TILE_NAMES, TileId } from '../types/tile';
 
 // ========== 游戏画面类型 ==========
 type Screen = 'title' | 'shop' | 'game' | 'result';
@@ -24,6 +24,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const [scoreDetails, setScoreDetails] = useState<string[]>([]);
   const [scorePopup, setScorePopup] = useState<{ score: number; visible: boolean }>({ score: 0, visible: false });
   const [winEffect, setWinEffect] = useState<{ pattern: string; visible: boolean }>({ pattern: '', visible: false });
+  const [universalDisplay, setUniversalDisplay] = useState<TileId | null>(null); // 万能牌临时显示的牌ID
   const [shopSlotIndex, setShopSlotIndex] = useState<number | null>(null);
   const [animating, setAnimating] = useState(false);
   
@@ -279,6 +280,11 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       setScoreDetails(prev => [...prev, `${result.winPattern} ${result.winFan}番 +${result.winScore}分`]);
       setMessage(result.message);
       
+      // 如果有万能牌，临时显示为最佳牌型所缺的牌
+      if (result.universalDisplayTile) {
+        setUniversalDisplay(result.universalDisplayTile);
+      }
+      
       // 1.5秒后自动丢弃lastDraw并继续游戏（如果牌山还有牌）
       setTimeout(() => {
         setWinEffect({ pattern: '', visible: false });
@@ -289,6 +295,8 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           checkLevelComplete(updatedLevel);
         } else {
           // 牌山还有牌，自动丢弃lastDraw并继续
+          // 清除万能牌临时显示（恢复为问号）
+          setUniversalDisplay(null);
           const continueResult = autoDiscardAfterWin(updatedLevel.wall, updatedLevel.hand);
           const continueLevel: LevelState = {
             ...updatedLevel,
@@ -511,7 +519,15 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                   title={isUniversal ? "万象天引-万能牌（不可丢弃）" : isLastDraw ? "刚摸到的牌，点击丢弃" : "点击丢弃此牌"}
                 >
                   {isUniversal ? (
-                    <div className={styles.universalIcon}>?</div>
+                    universalDisplay ? (
+                      <img
+                        src={`/tiles/${universalDisplay}.png`}
+                        alt={universalDisplay}
+                        className={styles.tileImg}
+                      />
+                    ) : (
+                      <div className={styles.universalIcon}>?</div>
+                    )
                   ) : (
                     <img
                       src={`/tiles/${tile.id}.png`}

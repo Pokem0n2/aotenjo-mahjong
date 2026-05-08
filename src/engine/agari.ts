@@ -416,6 +416,9 @@ export function formatAgari(result: AgariResult): string {
  * 万能牌最大番数搜索
  * 遍历34种牌，找到万能牌作为哪种牌时胡牌番数最大
  * 返回最佳胡牌结果和万能牌应扮演的牌ID
+ * 
+ * 注意：hand.tiles 包含14张牌（含lastDraw），需要移除winningTile后再传给isAgari
+ * 这样isAgari内部 allTiles = 13张 + winningTile = 14张，胡牌判定才能正确
  */
 export function findBestAgariWithUniversal(
   hand: HandState,
@@ -425,14 +428,32 @@ export function findBestAgariWithUniversal(
   let bestTileId: TileId | null = null;
   let bestFan = 0;
 
+  // 从14张手牌中移除winningTile，得到13张牌的手牌
+  // 注意：可能有重复牌，只移除一张
+  const tilesWithoutWinning: Tile[] = [];
+  let removed = false;
+  for (const t of hand.tiles) {
+    if (!removed && t.id === winningTile.id) {
+      removed = true; // 跳过第一张匹配的winningTile
+      continue;
+    }
+    tilesWithoutWinning.push(t);
+  }
+  
+  // 如果过滤后少于13张（说明没有匹配的winningTile），取前13张
+  const baseHand13: HandState = {
+    ...hand,
+    tiles: tilesWithoutWinning.length === 13 ? tilesWithoutWinning : hand.tiles.slice(0, 13)
+  };
+
   // 遍历34种牌，测试万能牌作为每种牌的情况
   for (const tileId of ALL_TILE_IDS) {
     // 创建临时手牌：将万能牌替换为当前测试的牌
-    const tempTiles = hand.tiles.map(t =>
+    const tempTiles = baseHand13.tiles.map(t =>
       t.id === 'universal' ? makeTile(ALL_TILE_IDS.indexOf(tileId)) : t
     );
     const tempHand: HandState = {
-      ...hand,
+      ...baseHand13,
       tiles: tempTiles,
     };
 
