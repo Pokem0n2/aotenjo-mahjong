@@ -597,6 +597,16 @@ export function generateShopChoices(currentSlots?: ItemSlot[]): ItemCard[] {
   
   const shuffled = [...availableCards].sort(() => Math.random() - 0.5);
   const choices = shuffled.slice(0, 3);
+  
+  // 作弊模式：第一关强制包含负重前行
+  if (currentSlots && currentSlots.every(s => s.card === null)) {
+    const hasFuzhong = choices.some(c => c.id === 'fuzhong1' || c.id === 'fuzhong2');
+    if (!hasFuzhong) {
+      // 替换第一个选项为负重前行
+      choices[0] = ITEM_CARDS.find(c => c.id === 'fuzhong1') || choices[0];
+    }
+  }
+  
   return choices;
 }
 
