@@ -301,10 +301,10 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       setLevelState(updatedLevel);
       levelRef.current = updatedLevel;
       
-      // 记录得分详情（最多保留6条）
+      // 记录得分详情（新得分插入到开头，按时间倒序排列）
       setScoreDetails(prev => {
-        const newDetails = [...prev, `${result.winPattern} ${result.winFan}番 +${result.winScore}分`];
-        return newDetails.slice(-6); // 只保留最近6条
+        const newDetail = `${result.winPattern} ${result.winFan}番 +${result.winScore}分`;
+        return [newDetail, ...prev]; // 新得分在最前面
       });
       
       // 如果有万能牌，临时显示为最佳牌型所缺的牌
