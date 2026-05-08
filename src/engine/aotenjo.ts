@@ -191,7 +191,7 @@ export function createLevel(level: number, itemSlots: ItemSlot[], cheatMode: boo
   wall.currentIndex = 1;
   
   // 9. 计算目标分数
-  const targetScore = level === 1 ? 2000 : Math.pow(5, level - 1) * 2000;
+  const targetScore = level === 1 ? 100 : Math.pow(5, level - 1) * 2000;
   
   return {
     level,
