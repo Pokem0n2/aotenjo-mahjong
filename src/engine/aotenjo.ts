@@ -1,7 +1,7 @@
 import { Tile, TileId, Suit, ALL_TILE_IDS, createTile, shuffleDeck, handToCounts, TILE_NAMES, UNIVERSAL_TILE_ID, createUniversalTile } from '../types/tile';
 import { HandState, createHand, initHand, handDraw, handDiscard } from './hand';
 import { AgariResult } from './agari';
-import { tilesTo34, isAgariWithShanten } from './shanten-new';
+import { tilesTo34, isAgariWithShanten, evaluateHandWithUniversal } from './shanten-new';
 
 // ========== 牌山状态 ==========
 export interface WallState {
@@ -260,34 +260,18 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     let bestTileId: TileId | null = null;
     
     if (hasUniversal) {
-      // 有万能牌：遍历34种可能，找最大番数
-      const tiles34 = tilesTo34(finalHand.tiles);
-      const universalCount = finalHand.tiles.filter(t => t.id === UNIVERSAL_TILE_ID).length;
-      
-      // 遍历万能牌作为每种牌的情况
-      for (const tileId of ALL_TILE_IDS) {
-        const tempTiles = [...tiles34];
-        // 将一张万能牌作为tileId（增加对应牌的计数）
-        const idx = ALL_TILE_IDS.indexOf(tileId);
-        tempTiles[idx]++;
-        
-        if (isAgariWithShanten(tempTiles, universalCount - 1)) {
-          // 计算番数（简化）
-          let fan = 1;
-          // TODO: 更精确的番数计算（检查七对子、国士等）
-          
-          if (fan > bestFan) {
-            bestFan = fan;
-            bestPattern = '一般';
-            bestTileId = tileId;
-            agariResult = { isAgari: true, form: 'standard', melds: [], waits: [], isTsumo: true, isMenzen: true };
-          }
-        }
+      // 有万能牌：使用evaluateHandWithUniversal评估
+      const evalResult = evaluateHandWithUniversal(finalHand.tiles);
+      if (evalResult.isAgari) {
+        agariResult = { isAgari: true, form: 'standard', melds: [], waits: [], isTsumo: true, isMenzen: true };
+        bestPattern = evalResult.pattern;
+        bestFan = evalResult.fan;
+        bestTileId = evalResult.bestTileId;
       }
     } else {
       // 无万能牌：使用向听数计算判定胡牌
       const tiles34 = tilesTo34(finalHand.tiles);
-      if (isAgariWithShanten(tiles34, 0)) {
+      if (isAgariWithShanten(tiles34)) {
         agariResult = { isAgari: true, form: 'standard', melds: [], waits: [], isTsumo: true, isMenzen: true };
         bestPattern = '一般';
         bestFan = calculateFan(bestPattern, finalHand);
@@ -421,11 +405,8 @@ export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean;
   
   // 使用向听数计算判定胡牌（直接对14张牌判定）
   const tiles34 = tilesTo34(hand.tiles);
-  const hasUniversal = hand.tiles.some(t => t.id === UNIVERSAL_TILE_ID);
-  const universalCount = hasUniversal ? 1 : 0;
-  
-  if (isAgariWithShanten(tiles34, universalCount)) {
-    const pattern = hasUniversal ? '一般' : '一般';
+  if (isAgariWithShanten(tiles34)) {
+    const pattern = '一般';
     const fan = calculateFan(pattern, hand);
     const baseScore = calculateBaseScore(hand);
     return {

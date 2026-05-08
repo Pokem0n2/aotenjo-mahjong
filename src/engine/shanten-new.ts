@@ -1,10 +1,14 @@
 /**
  * 向听数计算与听牌分析
  * 基于 EndlessCheng 的 mahjong-helper 项目算法
- * 适配为 TypeScript，支持万能牌
+ * 适配为 TypeScript
+ * 
+ * 核心思路：
+ * 1. 无万能牌：直接计算向听数/听牌列表
+ * 2. 有万能牌：移除万能牌→13张牌→计算听牌列表→万能牌可变为任意听牌
  */
 
-import { Tile, TileId, ALL_TILE_IDS, TileCounts } from '../types/tile';
+import { Tile, TileId, ALL_TILE_IDS } from '../types/tile';
 
 // 常量定义
 const SHANTEN_AGARI = -1;
@@ -73,7 +77,6 @@ class ShantenCalculator {
     this.minShanten = 8;
   }
 
-  // 扫描字牌
   scanCharacterTiles(countOfTiles: number) {
     let ankanTiles = 0;
     let isolatedTiles = 0;
@@ -112,7 +115,6 @@ class ShantenCalculator {
     }
   }
 
-  // 计算一般型向听数
   calcNormalShanten(): number {
     let shanten = 8 - 2 * this.numberMelds - this.numberTatsu - this.numberPairs;
     let numMentsuKouho = this.numberMelds + this.numberTatsu;
@@ -200,7 +202,6 @@ class ShantenCalculator {
     this.isolatedTiles &= ~(1 << k);
   }
 
-  // 递归计算向听数
   run(depth: number) {
     if (this.minShanten === SHANTEN_AGARI) return;
 
@@ -348,6 +349,15 @@ function calculateShantenOfNormal(tiles34: number[], countOfTiles: number): numb
   return st.minShanten;
 }
 
+// 计算向听数（综合一般型、七对子、国士无双）
+function calculateShanten(tiles34: number[]): number {
+  const countOfTiles = countOfTiles34(tiles34);
+  const normalShanten = calculateShantenOfNormal(tiles34, countOfTiles);
+  const chiitoiShanten = calculateShantenOfChiitoi(tiles34);
+  const kokushiShanten = calculateShantenOfKokushi(tiles34);
+  return minInt(minInt(normalShanten, chiitoiShanten), kokushiShanten);
+}
+
 // ========== 对外接口 ==========
 
 /**
@@ -363,65 +373,13 @@ export function tilesTo34(tiles: Tile[]): number[] {
 }
 
 /**
- * 计算向听数（支持万能牌）
- * @param tiles34 34维牌计数数组
- * @param universalCount 万能牌数量
- * @returns 向听数（-1=胡牌，0=听牌，1+=未听牌）
- */
-export function calculateShanten(tiles34: number[], universalCount: number = 0): number {
-  const countOfTiles = countOfTiles34(tiles34) + universalCount;
-
-  if (countOfTiles > 14) {
-    throw new Error(`[calculateShanten] 手牌超过14张: ${countOfTiles}`);
-  }
-
-  // 没有万能牌：直接计算
-  if (universalCount === 0) {
-    const normalShanten = calculateShantenOfNormal(tiles34, countOfTiles);
-    const chiitoiShanten = calculateShantenOfChiitoi(tiles34);
-    const kokushiShanten = calculateShantenOfKokushi(tiles34);
-    return minInt(minInt(normalShanten, chiitoiShanten), kokushiShanten);
-  }
-
-  // 有万能牌：遍历万能牌作为每种牌的情况，找最小向听数
-  let minShanten = 8;
-
-  // 情况1：万能牌作为独立牌（增加对子/刻子）
-  for (let i = 0; i < 34; i++) {
-    const tempTiles = [...tiles34];
-    // 将一张万能牌作为牌i
-    tempTiles[i]++;
-    const shanten = calculateShanten(tempTiles, universalCount - 1);
-    minShanten = minInt(minShanten, shanten);
-    if (minShanten === SHANTEN_AGARI) return SHANTEN_AGARI;
-  }
-
-  // 情况2：如果有多张万能牌，递归处理
-  if (universalCount >= 2) {
-    for (let i = 0; i < 34; i++) {
-      for (let j = 0; j < 34; j++) {
-        const tempTiles = [...tiles34];
-        tempTiles[i]++;
-        tempTiles[j]++;
-        const shanten = calculateShanten(tempTiles, universalCount - 2);
-        minShanten = minInt(minShanten, shanten);
-        if (minShanten === SHANTEN_AGARI) return SHANTEN_AGARI;
-      }
-    }
-  }
-
-  return minShanten;
-}
-
-/**
  * 获取听牌列表（13张手牌且向听数为0时）
  * @param tiles34 34维牌计数数组
- * @param universalCount 万能牌数量
  * @returns 听的牌ID列表
  */
-export function getTenpaiTiles(tiles34: number[], universalCount: number = 0): TileId[] {
-  const countOfTiles = countOfTiles34(tiles34) + universalCount;
-  const shanten = calculateShanten(tiles34, universalCount);
+export function getTenpaiTiles(tiles34: number[]): TileId[] {
+  const countOfTiles = countOfTiles34(tiles34);
+  const shanten = calculateShanten(tiles34);
 
   if (countOfTiles !== 13 || shanten !== 0) {
     return [];
@@ -432,7 +390,7 @@ export function getTenpaiTiles(tiles34: number[], universalCount: number = 0): T
   for (let i = 0; i < 34; i++) {
     const tempTiles = [...tiles34];
     tempTiles[i]++;
-    const newShanten = calculateShanten(tempTiles, universalCount);
+    const newShanten = calculateShanten(tempTiles);
     if (newShanten < shanten) {
       tenpaiTiles.push(ALL_TILE_IDS[i]);
     }
@@ -444,13 +402,184 @@ export function getTenpaiTiles(tiles34: number[], universalCount: number = 0): T
 /**
  * 检查是否胡牌（14张牌）
  * @param tiles34 34维牌计数数组
- * @param universalCount 万能牌数量
  * @returns 是否胡牌
  */
-export function isAgariWithShanten(tiles34: number[], universalCount: number = 0): boolean {
-  const countOfTiles = countOfTiles34(tiles34) + universalCount;
+export function isAgariWithShanten(tiles34: number[]): boolean {
+  const countOfTiles = countOfTiles34(tiles34);
   if (countOfTiles !== 14) return false;
-  return calculateShanten(tiles34, universalCount) === SHANTEN_AGARI;
+  return calculateShanten(tiles34) === SHANTEN_AGARI;
+}
+
+/**
+ * 万能牌最佳牌型搜索结果
+ */
+export interface BestUniversalResult {
+  bestTileId: TileId | null;  // 万能牌应变成的牌（null=无法胡牌）
+  isAgari: boolean;           // 是否胡牌
+  pattern: string;            // 牌型名称
+  fan: number;                // 番数
+  shanten: number;            // 向听数
+  waits: TileId[];            // 听牌列表
+}
+
+/**
+ * 评估手牌（含万能牌）
+ * 
+ * 核心逻辑：
+ * 1. 从手牌中移除万能牌，得到13张普通牌
+ * 2. 用mahjong-analysis算法计算这13张牌的听牌列表
+ * 3. 对每张听牌，模拟摸入后计算牌型得分
+ * 4. 选择得分最高的牌型，万能牌变成该牌型所缺的牌
+ * 
+ * @param handTiles 完整手牌（含万能牌）
+ * @returns 最佳结果
+ */
+export function evaluateHandWithUniversal(handTiles: Tile[]): BestUniversalResult {
+  // 分离万能牌和普通牌
+  const normalTiles: Tile[] = [];
+  let universalCount = 0;
+  
+  for (const tile of handTiles) {
+    if (tile.id === 'universal') {
+      universalCount++;
+    } else {
+      normalTiles.push(tile);
+    }
+  }
+
+  const tiles34 = tilesTo34(normalTiles);
+  const countOfTiles = countOfTiles34(tiles34);
+
+  // 无万能牌：直接计算
+  if (universalCount === 0) {
+    const shanten = calculateShanten(tiles34);
+    return {
+      bestTileId: null,
+      isAgari: shanten === SHANTEN_AGARI,
+      pattern: shanten === SHANTEN_AGARI ? '一般' : '',
+      fan: shanten === SHANTEN_AGARI ? 1 : 0,
+      shanten,
+      waits: [],
+    };
+  }
+
+  // 有万能牌：
+  // 情况A：13张普通牌 + 1张万能牌 = 14张
+  // 万能牌可以变成任意牌，所以13张普通牌的听牌列表就是万能牌的可变范围
+  if (countOfTiles === 13 && universalCount === 1) {
+    const shanten = calculateShanten(tiles34);
+    const waits = getTenpaiTiles(tiles34);
+
+    if (waits.length > 0) {
+      // 听牌了！遍历所有听牌，找得分最高的
+      let bestTileId: TileId | null = null;
+      let bestFan = 0;
+      let bestPattern = '一般';
+
+      for (const waitTileId of waits) {
+        // 模拟摸入这张牌
+        const tempTiles = [...tiles34];
+        const idx = ALL_TILE_IDS.indexOf(waitTileId);
+        tempTiles[idx]++;
+        
+        // 计算牌型得分（简化版）
+        const fan = calculatePatternFan(tempTiles);
+        
+        if (fan > bestFan) {
+          bestFan = fan;
+          bestTileId = waitTileId;
+          // TODO: 根据牌型确定pattern名称
+        }
+      }
+
+      return {
+        bestTileId: bestTileId || waits[0],
+        isAgari: true,
+        pattern: bestPattern,
+        fan: bestFan || 1,
+        shanten: SHANTEN_TENPAI,
+        waits,
+      };
+    }
+
+    // 未听牌，返回向听数
+    return {
+      bestTileId: null,
+      isAgari: false,
+      pattern: '',
+      fan: 0,
+      shanten,
+      waits: [],
+    };
+  }
+
+  // 其他情况（如12张普通牌 + 2张万能牌等）：降级为遍历处理
+  // TODO: 处理多张万能牌的情况
+  return {
+    bestTileId: null,
+    isAgari: false,
+    pattern: '',
+    fan: 0,
+    shanten: 8,
+    waits: [],
+  };
+}
+
+/**
+ * 计算牌型番数（简化版）
+ * 基于14张牌的牌型特征计算
+ */
+function calculatePatternFan(tiles34: number[]): number {
+  let fan = 1;
+  
+  // 检查七对子
+  let pairs = 0;
+  for (const c of tiles34) {
+    if (c === 2) pairs++;
+    if (c === 4) pairs += 2;
+  }
+  if (pairs === 7) return 2;
+  
+  // 检查国士无双
+  const yaochuIndices = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
+  let hasAllYaochu = true;
+  let hasPair = false;
+  for (const idx of yaochuIndices) {
+    if (tiles34[idx] === 0) hasAllYaochu = false;
+    if (tiles34[idx] >= 2) hasPair = true;
+  }
+  if (hasAllYaochu && hasPair) return 13;
+  
+  // 检查清一色
+  let suitCounts = { m: 0, p: 0, s: 0, z: 0 };
+  for (let i = 0; i < 34; i++) {
+    if (tiles34[i] > 0) {
+      if (i < 9) suitCounts.m += tiles34[i];
+      else if (i < 18) suitCounts.p += tiles34[i];
+      else if (i < 27) suitCounts.s += tiles34[i];
+      else suitCounts.z += tiles34[i];
+    }
+  }
+  
+  const nonZeroSuits = [suitCounts.m, suitCounts.p, suitCounts.s, suitCounts.z].filter(c => c > 0);
+  if (nonZeroSuits.length === 1 && suitCounts.z === 0) {
+    // 清一色
+    fan = Math.max(fan, 6);
+  } else if (nonZeroSuits.length === 2 && suitCounts.z > 0) {
+    // 混一色
+    fan = Math.max(fan, 3);
+  }
+  
+  // 检查对对和
+  let kotsuCount = 0;
+  for (const c of tiles34) {
+    if (c >= 3) kotsuCount++;
+  }
+  if (kotsuCount >= 4) {
+    fan = Math.max(fan, 2);
+  }
+  
+  return fan;
 }
 
 /**
@@ -463,17 +592,17 @@ export interface TenpaiInfo {
 }
 
 /**
- * 获取听牌信息
+ * 获取听牌信息（13张牌）
  */
-export function getTenpaiInfo(handTiles: Tile[], universalCount: number = 0): TenpaiInfo {
+export function getTenpaiInfo(handTiles: Tile[]): TenpaiInfo {
   const tiles34 = tilesTo34(handTiles);
-  const shanten = calculateShanten(tiles34, universalCount);
-  const countOfTiles = countOfTiles34(tiles34) + universalCount;
+  const shanten = calculateShanten(tiles34);
+  const countOfTiles = countOfTiles34(tiles34);
 
   if (countOfTiles === 13 && shanten === 0) {
     return {
       isTenpai: true,
-      waits: getTenpaiTiles(tiles34, universalCount),
+      waits: getTenpaiTiles(tiles34),
       shanten: 0,
     };
   }
