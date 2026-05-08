@@ -289,7 +289,7 @@ export function discardAndDraw(
       
       // 应用道具卡效果（负重前行等）
       if (itemSlots && itemSlots.length > 0) {
-        const effectResult = applyItemEffects(baseScore * bestFan, bestPattern, itemSlots, finalHand);
+        const effectResult = applyItemEffects(score, bestPattern, itemSlots, finalHand);
         score = effectResult.finalScore;
       }
       
