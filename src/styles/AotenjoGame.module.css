@@ -581,10 +581,19 @@
   margin-bottom: 10px;
 }
 
-.scoreDetails p {
+.scoreGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scoreItem {
   color: #aaa;
-  margin: 5px 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
 /* ========== 结果画面 ========== */

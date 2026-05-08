@@ -301,31 +301,26 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       setLevelState(updatedLevel);
       levelRef.current = updatedLevel;
       
-      // 显示胡牌效果
-      setWinEffect({ pattern: result.winPattern, visible: true });
-      setScorePopup({ score: result.winScore, visible: true });
-      setScoreDetails(prev => [...prev, `${result.winPattern} ${result.winFan}番 +${result.winScore}分`]);
-      setMessage(result.message);
+      // 记录得分详情（最多保留6条）
+      setScoreDetails(prev => {
+        const newDetails = [...prev, `${result.winPattern} ${result.winFan}番 +${result.winScore}分`];
+        return newDetails.slice(-6); // 只保留最近6条
+      });
       
       // 如果有万能牌，临时显示为最佳牌型所缺的牌
       if (result.universalDisplayTile) {
         setUniversalDisplay(result.universalDisplayTile);
       }
       
-      // 1.5秒后清除动画，让玩家手动选择丢弃哪张牌
-      setTimeout(() => {
-        setWinEffect({ pattern: '', visible: false });
-        setScorePopup({ score: 0, visible: false });
-        
-        if (result.isWallEmpty) {
-          // 牌山已空，进入结算
-          checkLevelComplete(updatedLevel);
-        } else {
-          // 牌山还有牌，让玩家手动选择丢弃一张牌（包括lastDraw）
-          setAnimating(false);
-          setMessage('🎉 胡牌了！请选择一张牌丢弃，继续游戏');
-        }
-      }, 1500);
+      // 胡牌信息直接显示在消息行，不单独弹出动画
+      if (result.isWallEmpty) {
+        // 牌山已空，进入结算
+        checkLevelComplete(updatedLevel);
+      } else {
+        // 牌山还有牌，让玩家手动选择丢弃一张牌
+        setAnimating(false);
+        setMessage(`${result.message} | 🎉 请选择一张牌丢弃，继续游戏`);
+      }
     } else if (result.isWallEmpty) {
       // 牌山已空，没胡牌，让玩家手动选择丢弃一张牌后再结算
       setAnimating(false);
@@ -559,10 +554,12 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         {/* 得分详情 */}
         {scoreDetails.length > 0 && (
           <div className={styles.scoreDetails}>
-            <h4>上次得分详情</h4>
-            {scoreDetails.map((detail, index) => (
-              <p key={index}>{detail}</p>
-            ))}
+            <h4>得分详情</h4>
+            <div className={styles.scoreGrid}>
+              {scoreDetails.map((detail, index) => (
+                <span key={index} className={styles.scoreItem}>{detail}</span>
+              ))}
+            </div>
           </div>
         )}
       </div>
