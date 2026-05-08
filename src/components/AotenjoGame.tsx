@@ -8,6 +8,7 @@ import {
   tileToId, drawFromWall, autoDiscardAfterWin
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES, TileId } from '../types/tile';
+import { handDiscard } from '../engine/hand';
 
 // ========== 游戏画面类型 ==========
 type Screen = 'title' | 'shop' | 'game' | 'result';
@@ -39,7 +40,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   // ========== 开始新游戏 ==========
   const startNewGame = useCallback(() => {
     const newGame = createGameState();
-    const choices = generateShopChoices();
+    const choices = generateShopChoices(newGame.itemSlots);
     newGame.shopChoices = choices;
     setGameState(newGame);
     gameRef.current = newGame;
@@ -50,7 +51,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
 
   // ========== 进入商店 ==========
   const enterShop = useCallback((slots: ItemSlot[]) => {
-    const choices = generateShopChoices();
+    const choices = generateShopChoices(slots);
     setGameState(prev => {
       const newState = { ...prev, shopChoices: choices };
       gameRef.current = newState;
@@ -250,6 +251,27 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const discardTile = useCallback((tile: Tile) => {
     if (!levelState || animating) return;
     
+    // 如果关卡已标记完成（牌山已空），弃牌后立即结算
+    if (levelState.isComplete) {
+      // 清除万能牌临时显示
+      setUniversalDisplay(null);
+      
+      // 执行弃牌（不摸新牌，因为牌山已空）
+      const tileIndex = levelState.hand.tiles.findIndex(t => t.id === tile.id);
+      const discardResult = handDiscard(levelState.hand, tileIndex >= 0 ? tileIndex : levelState.hand.tiles.length - 1);
+      
+      const finalLevel: LevelState = {
+        ...levelState,
+        hand: discardResult.hand
+      };
+      setLevelState(finalLevel);
+      levelRef.current = finalLevel;
+      
+      // 立即结算
+      checkLevelComplete(finalLevel);
+      return;
+    }
+    
     setAnimating(true);
     
     // 点击弃牌时，清除万能牌临时显示（恢复为问号）
@@ -306,6 +328,14 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       // 牌山已空，没胡牌，让玩家手动选择丢弃一张牌后再结算
       setAnimating(false);
       setMessage(result.message);
+      
+      // 标记关卡为已完成（等待玩家弃牌后结算）
+      const completedLevel: LevelState = {
+        ...newLevel,
+        isComplete: true
+      };
+      setLevelState(completedLevel);
+      levelRef.current = completedLevel;
     } else {
       // 正常摸到新牌，继续游戏
       // 检查新摸的牌是否触发万能牌胡牌（已在discardAndDraw中处理）
@@ -316,8 +346,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
 
   // ========== 继续下一关 ==========
   const nextLevel = useCallback(() => {
-    enterShop(gameState.itemSlots);
-  }, [gameState.itemSlots, enterShop]);
+    // 使用 gameRef 获取最新的 gameState，避免闭包问题
+    enterShop(gameRef.current.itemSlots);
+  }, [enterShop]);
 
   // ========== 重新开始 ==========
   const restart = useCallback(() => {

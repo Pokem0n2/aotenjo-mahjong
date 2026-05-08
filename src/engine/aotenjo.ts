@@ -588,17 +588,18 @@ export function createGameState(): GameState {
 }
 
 // ========== 生成商店选项 ==========
-export function generateShopChoices(): ItemCard[] {
-  const shuffled = [...ITEM_CARDS].sort(() => Math.random() - 0.5);
-  const choices = shuffled.slice(0, 3);
-  // 确保万象天引总是出现（用于测试）
-  const hasWuxiang = choices.some(c => c.id === 'wuxiang');
-  if (!hasWuxiang) {
-    const wuxiang = ITEM_CARDS.find(c => c.id === 'wuxiang');
-    if (wuxiang) {
-      choices[2] = wuxiang; // 替换第三个
-    }
+export function generateShopChoices(currentSlots?: ItemSlot[]): ItemCard[] {
+  // 检查玩家是否已经有万象天引
+  const hasWuxiang = currentSlots?.some(slot => slot.card?.id === 'wuxiang');
+  
+  // 如果已有万象天引，从可选牌堆中移除
+  let availableCards = ITEM_CARDS;
+  if (hasWuxiang) {
+    availableCards = ITEM_CARDS.filter(c => c.id !== 'wuxiang');
   }
+  
+  const shuffled = [...availableCards].sort(() => Math.random() - 0.5);
+  const choices = shuffled.slice(0, 3);
   return choices;
 }
 
