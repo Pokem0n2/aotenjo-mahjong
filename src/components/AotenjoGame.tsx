@@ -285,7 +285,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         setUniversalDisplay(result.universalDisplayTile);
       }
       
-      // 1.5秒后自动丢弃lastDraw并继续游戏（如果牌山还有牌）
+      // 1.5秒后清除动画，让玩家手动选择丢弃哪张牌
       setTimeout(() => {
         setWinEffect({ pattern: '', visible: false });
         setScorePopup({ score: 0, visible: false });
@@ -294,29 +294,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           // 牌山已空，进入结算
           checkLevelComplete(updatedLevel);
         } else {
-          // 牌山还有牌，自动丢弃lastDraw并继续
-          // 清除万能牌临时显示（恢复为问号）
-          setUniversalDisplay(null);
-          const continueResult = autoDiscardAfterWin(updatedLevel.wall, updatedLevel.hand);
-          const continueLevel: LevelState = {
-            ...updatedLevel,
-            hand: continueResult.newHand,
-            wall: continueResult.newWall
-          };
-          setLevelState(continueLevel);
-          levelRef.current = continueLevel;
-          
-          if (continueResult.drawnTile) {
-            setAnimating(false);
-            setMessage(continueResult.message + '，请选择一张牌丢弃');
-          } else {
-            // 牌山空了
-            setAnimating(false);
-            setMessage('牌山已空！');
-            setTimeout(() => {
-              checkLevelComplete(continueLevel);
-            }, 1000);
-          }
+          // 牌山还有牌，让玩家手动选择丢弃一张牌（包括lastDraw）
+          setAnimating(false);
+          setMessage('🎉 胡牌了！请选择一张牌丢弃，继续游戏');
         }
       }, 1500);
     } else if (result.isWallEmpty) {
