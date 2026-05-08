@@ -503,27 +503,18 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           </div>
         </div>
         
-        {/* 手牌 - 直接点击即丢弃，lastDraw高亮 */}
+        {/* 手牌 - 直接点击即丢弃，lastDraw在最右侧高亮 */}
         <div className={styles.handSection}>
           <h3>手牌 ({levelState.hand.tiles.length}张) - 点击直接丢弃</h3>
           <div className={styles.handGrid}>
             {levelState.hand.tiles.map((tile, index) => {
-              // 通过索引匹配lastDraw：找到lastDraw在手牌中的实际索引（最后一张匹配的牌）
-              let lastDrawIndex = -1;
-              if (levelState.hand.lastDraw) {
-                for (let i = levelState.hand.tiles.length - 1; i >= 0; i--) {
-                  if (levelState.hand.tiles[i].id === levelState.hand.lastDraw.id) {
-                    lastDrawIndex = i;
-                    break;
-                  }
-                }
-              }
-              const isLastDraw = index === lastDrawIndex;
+              // 新规则：最后一张牌（最右侧）就是lastDraw
+              const isLastDraw = index === levelState.hand.tiles.length - 1;
               const isUniversal = tile.id === 'universal';
               
               return (
                 <button
-                  key={index}
+                  key={`${tile.id}-${index}`}
                   className={`${styles.handTile} ${isLastDraw ? styles.lastDrawHighlight : ''} ${isUniversal ? styles.universalTile : ''} ${animating ? styles.disabled : ''}`}
                   onClick={() => {
                     if (!animating && !isUniversal) {
@@ -550,6 +541,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                       className={styles.tileImg}
                     />
                   )}
+                  {isLastDraw && <div className={styles.newBadge}>新</div>}
                 </button>
               );
             })}

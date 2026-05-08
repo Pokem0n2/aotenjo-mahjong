@@ -126,7 +126,7 @@ export function remainingTiles(deck: DeckState): number {
   return deck.wall.length - deck.currentIndex;
 }
 
-/** 排序工具 */
+/** 排序工具 - 对指定范围内的牌排序（不包括固定位置的牌） */
 export function sortTiles(tiles: Tile[]): void {
   const order: Record<string, number> = {};
   ALL_TILE_IDS.forEach((id, i) => order[id] = i);
@@ -136,6 +136,78 @@ export function sortTiles(tiles: Tile[]): void {
     if (b.id === 'universal') return 1;
     return (order[a.id] ?? 99) - (order[b.id] ?? 99);
   });
+}
+
+/**
+ * 排序手牌（新规则）
+ * - 万能牌永远在最左侧（不参与排序）
+ * - 最后一张牌（lastDraw）固定在最右侧（不参与排序）
+ * - 中间部分按标准顺序排序
+ */
+export function sortHandTiles(tiles: Tile[], lastDraw: Tile | undefined): Tile[] {
+  if (!lastDraw || tiles.length <= 1) {
+    // 没有lastDraw或只有1张牌，直接标准排序
+    const result = [...tiles];
+    sortTiles(result);
+    return result;
+  }
+
+  // 1. 提取万能牌（最左侧）
+  const universalTiles = tiles.filter(t => t.id === 'universal');
+  
+  // 2. 提取lastDraw（最右侧）
+  // 找到lastDraw在手牌中的位置（从后往前找第一张匹配的）
+  let lastDrawIndex = -1;
+  for (let i = tiles.length - 1; i >= 0; i--) {
+    if (tiles[i].id === lastDraw.id) {
+      lastDrawIndex = i;
+      break;
+    }
+  }
+  
+  const lastDrawTile = lastDrawIndex >= 0 ? tiles[lastDrawIndex] : lastDraw;
+  
+  // 3. 中间部分：除万能牌和lastDraw外的牌
+  const middleTiles = tiles.filter((t, i) => 
+    t.id !== 'universal' && i !== lastDrawIndex
+  );
+  
+  // 4. 中间部分排序
+  sortTiles(middleTiles);
+  
+  // 5. 组合：[万能牌...] + [中间排序牌...] + [lastDraw]
+  return [...universalTiles, ...middleTiles, lastDrawTile];
+}
+
+/**
+ * 弃牌后排序（新规则）
+ * - 万能牌永远在最左侧
+ * - 当前最右侧的牌保持不动（它是之前摸入的，现在成为"已确定位置"的牌）
+ * - 其余牌排序
+ */
+export function sortAfterDiscard(tiles: Tile[]): Tile[] {
+  if (tiles.length <= 1) {
+    const result = [...tiles];
+    sortTiles(result);
+    return result;
+  }
+
+  // 1. 提取万能牌（最左侧）
+  const universalTiles = tiles.filter(t => t.id === 'universal');
+  
+  // 2. 最右侧的牌保持不动
+  const rightmostTile = tiles[tiles.length - 1];
+  
+  // 3. 中间部分：除万能牌和最右侧牌外的牌
+  const middleTiles = tiles.filter((t, i) => 
+    t.id !== 'universal' && i !== tiles.length - 1
+  );
+  
+  // 4. 中间部分排序
+  sortTiles(middleTiles);
+  
+  // 5. 组合：[万能牌...] + [中间排序牌...] + [最右侧牌]
+  return [...universalTiles, ...middleTiles, rightmostTile];
 }
 
 /** 获取宝牌列表 */

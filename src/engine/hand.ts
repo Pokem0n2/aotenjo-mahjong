@@ -52,12 +52,15 @@ export function initHand(tiles: Tile[]): HandState {
 }
 
 /** 摸牌 */
+import { sortHandTiles, sortAfterDiscard } from './deck';
+
 export function handDraw(hand: HandState, tile: Tile): HandState {
+  // 新规则：摸牌后，新牌固定在最右侧，其余牌排序
   const newTiles = [...hand.tiles, tile];
-  sortTiles(newTiles);
+  const sortedTiles = sortHandTiles(newTiles, tile);
   return {
     ...hand,
-    tiles: newTiles,
+    tiles: sortedTiles,
     lastDraw: tile,
     tsumo: false,
   };
@@ -67,11 +70,12 @@ export function handDraw(hand: HandState, tile: Tile): HandState {
 export function handDiscard(hand: HandState, tileIndex: number): { hand: HandState; tile: Tile } {
   const tile = hand.tiles[tileIndex];
   const newTiles = hand.tiles.filter((_, i) => i !== tileIndex);
-  sortTiles(newTiles);
+  // 新规则：弃牌后，最右侧牌保持不动，其余牌排序
+  const sortedTiles = sortAfterDiscard(newTiles);
   return {
     hand: {
       ...hand,
-      tiles: newTiles,
+      tiles: sortedTiles,
       discards: [...hand.discards, tile],
       lastDiscard: tile,
       lastDraw: undefined as unknown as Tile,
