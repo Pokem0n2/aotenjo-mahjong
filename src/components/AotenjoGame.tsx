@@ -361,6 +361,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setMessage('');
     setScoreDetails([]);
     setAnimating(false);
+    setUniversalDisplay(null); // 清除万能牌临时显示
   }, []);
 
   // ========== 渲染标题画面 ==========
