@@ -657,6 +657,77 @@
   box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
 }
 
+.homeBtn {
+  background: #4ecdc4;
+  color: white;
+  margin-left: 15px;
+}
+
+.homeBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+}
+
+/* ========== 排行榜 ========== */
+.leaderboard {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px 0 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.leaderboard h3 {
+  font-size: 1.5rem;
+  color: #ffd700;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.leaderboardTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.leaderboardTable th {
+  padding: 10px;
+  color: #aaa;
+  font-weight: normal;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.leaderboardTable td {
+  padding: 12px 10px;
+  text-align: center;
+  color: #eee;
+}
+
+.leaderboardTable tbody tr {
+  transition: background 0.3s;
+}
+
+.leaderboardTable tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.topRank {
+  background: rgba(255, 215, 0, 0.1) !important;
+}
+
+.topRank td {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.emptyLeaderboard {
+  color: #888;
+  text-align: center;
+  padding: 20px;
+}
+
 /* ========== 响应式 ========== */
 @media (max-width: 768px) {
   .title {

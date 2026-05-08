@@ -99,6 +99,54 @@ export interface GameState {
   message: string;
 }
 
+// ========== 排行榜 ==========
+export interface LeaderboardEntry {
+  rank: number;
+  score: number;
+  level: number;
+  date: string;
+}
+
+const LEADERBOARD_KEY = 'aotenjo_leaderboard';
+const MAX_LEADERBOARD_SIZE = 10;
+
+export function getLeaderboard(): LeaderboardEntry[] {
+  try {
+    const data = localStorage.getItem(LEADERBOARD_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return [];
+}
+
+export function saveLeaderboard(entries: LeaderboardEntry[]): void {
+  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+}
+
+export function addToLeaderboard(score: number, level: number): LeaderboardEntry[] {
+  const entries = getLeaderboard();
+  const newEntry: LeaderboardEntry = {
+    rank: 0,
+    score,
+    level,
+    date: new Date().toLocaleDateString('zh-CN')
+  };
+  entries.push(newEntry);
+  // 按分数降序排列
+  entries.sort((a, b) => b.score - a.score);
+  // 只保留前10名
+  const topEntries = entries.slice(0, MAX_LEADERBOARD_SIZE);
+  // 重新计算排名
+  topEntries.forEach((entry, index) => {
+    entry.rank = index + 1;
+  });
+  saveLeaderboard(topEntries);
+  return topEntries;
+}
+
 // ========== 创建完整牌组（136张） ==========
 function createFullDeck(): Tile[] {
   const deck: Tile[] = [];

@@ -5,7 +5,8 @@ import {
   createGameState, createLevel, generateShopChoices,
   addItemCard, updateItemsAfterLevel, updateItemsAfterWin,
   discardAndDraw, checkWin, calculateBaseScore, applyItemEffects,
-  tileToId, drawFromWall, autoDiscardAfterWin
+  tileToId, drawFromWall, autoDiscardAfterWin,
+  addToLeaderboard, getLeaderboard, LeaderboardEntry
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES, TileId } from '../types/tile';
 import { handDiscard } from '../engine/hand';
@@ -28,6 +29,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const [universalDisplay, setUniversalDisplay] = useState<TileId | null>(null); // 万能牌临时显示的牌ID
   const [shopSlotIndex, setShopSlotIndex] = useState<number | null>(null);
   const [animating, setAnimating] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   
   // 使用ref来避免闭包问题
   const levelRef = useRef<LevelState | null>(null);
@@ -240,8 +242,12 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     } else {
       // 失败
       setMessage(`❌ 第 ${currentLevel.level} 关失败！得分: ${currentLevel.currentScore}/${currentLevel.targetScore}`);
+      // 游戏结束，保存到排行榜
+      const totalScore = gameRef.current.totalScore + currentLevel.currentScore;
+      const newLeaderboard = addToLeaderboard(totalScore, currentLevel.level);
+      setLeaderboard(newLeaderboard);
       setGameState(prev => {
-        const newState = { ...prev, gameOver: true };
+        const newState = { ...prev, gameOver: true, totalScore };
         gameRef.current = newState;
         return newState;
       });
@@ -579,15 +585,53 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         </div>
       )}
       
+      {/* 游戏结束时显示排行榜 */}
+      {gameState.gameOver && (
+        <div className={styles.leaderboard}>
+          <h3>🏆 历史排行榜 (Top 10)</h3>
+          {leaderboard.length === 0 ? (
+            <p className={styles.emptyLeaderboard}>暂无记录</p>
+          ) : (
+            <table className={styles.leaderboardTable}>
+              <thead>
+                <tr>
+                  <th>排名</th>
+                  <th>总分</th>
+                  <th>到达关卡</th>
+                  <th>日期</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((entry) => (
+                  <tr key={entry.rank} className={entry.rank <= 3 ? styles.topRank : ''}>
+                    <td>
+                      {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank}
+                    </td>
+                    <td>{entry.score.toLocaleString()}</td>
+                    <td>第 {entry.level} 关</td>
+                    <td>{entry.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+      
       <div className={styles.resultActions}>
         {!gameState.gameOver ? (
           <button className={styles.nextBtn} onClick={nextLevel}>
             下一关
           </button>
         ) : (
-          <button className={styles.restartBtn} onClick={restart}>
-            重新开始
-          </button>
+          <>
+            <button className={styles.restartBtn} onClick={restart}>
+              重新开始
+            </button>
+            <button className={styles.homeBtn} onClick={() => setScreen('title')}>
+              返回首页
+            </button>
+          </>
         )}
       </div>
     </div>
