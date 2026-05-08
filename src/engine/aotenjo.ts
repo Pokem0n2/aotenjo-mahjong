@@ -99,6 +99,16 @@ export interface GameState {
   message: string;
 }
 
+// ========== 统一分数格式化 ==========
+export function formatScore(score: number): string {
+  if (score > 10000) {
+    const exponent = Math.floor(Math.log10(score));
+    const mantissa = (score / Math.pow(10, exponent)).toFixed(2);
+    return `${mantissa}e${exponent}`;
+  }
+  return score.toLocaleString('en-US');
+}
+
 // ========== 排行榜 ==========
 export interface LeaderboardEntry {
   rank: number;
@@ -547,13 +557,13 @@ export function applyItemEffects(
   hand?: HandState
 ): { finalScore: number; details: string[]; universalTiles?: Tile[] } {
   let score = baseScore;
-  const details: string[] = [`基础分: ${baseScore}`];
+  const details: string[] = [`基础分: ${formatScore(baseScore)}`];
   let universalTiles: Tile[] = [];
   
   // 先应用番数
   const fan = calculateFan(pattern, hand);
   score *= fan;
-  details.push(`×${fan}番 = ${score}`);
+  details.push(`×${fan}番 = ${formatScore(Math.floor(score))}`);
   
   // 依次应用8个槽位的道具卡
   for (let i = 0; i < itemSlots.length; i++) {
@@ -578,13 +588,13 @@ export function applyItemEffects(
       case 'fuzhong1':
       case 'fuzhong2':
         score *= slot.multiplier;
-        details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${Math.floor(score)}`);
+        details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${formatScore(Math.floor(score))}`);
         break;
         
       case 'tiaotiao':
         if (pattern === '清一色' || pattern.indexOf('条') >= 0) {
           score *= 10;
-          details.push(`[槽${i+1}] ${card.name} ×10 = ${Math.floor(score)}`);
+          details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
         }
         break;
         

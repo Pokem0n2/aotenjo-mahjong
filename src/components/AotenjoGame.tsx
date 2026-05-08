@@ -6,7 +6,8 @@ import {
   addItemCard, updateItemsAfterLevel, updateItemsAfterWin,
   discardAndDraw, checkWin, calculateBaseScore, applyItemEffects,
   tileToId, drawFromWall, autoDiscardAfterWin,
-  addToLeaderboard, getLeaderboard, LeaderboardEntry
+  addToLeaderboard, getLeaderboard, LeaderboardEntry,
+  formatScore
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES, TileId } from '../types/tile';
 import { handDiscard } from '../engine/hand';
@@ -82,9 +83,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       // 进入关卡
       startLevel(currentGame.level, newSlots);
     } else {
-      // 槽位已满，需要选择替换
-      setMessage('槽位已满！请选择要替换的槽位');
-      setShopSlotIndex(0);
+      // 槽位已满，让玩家自主选择替换哪个槽位
+      setMessage('槽位已满！请先点击下方槽位选择要替换的道具卡，再点击新卡确认');
+      setShopSlotIndex(null); // 不预设任何槽位，等待玩家点击
     }
   }, []);
 
@@ -138,7 +139,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setLevelState(newLevel);
     levelRef.current = newLevel;
     setScoreDetails(details);
-    setMessage(`🎉 胡牌！${pattern} - 获得 ${finalScore}分 (累计: ${newScore})`);
+    setMessage(`🎉 胡牌！${pattern} - 获得 ${formatScore(finalScore)}分 (累计: ${formatScore(newScore)})`);
     
     // 显示动画
     setScorePopup({ score: finalScore, visible: true });
@@ -237,11 +238,11 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         return newState;
       });
       
-      setMessage(`✅ 第 ${currentLevel.level} 关通过！得分: ${currentLevel.currentScore}`);
+      setMessage(`✅ 第 ${currentLevel.level} 关通过！得分: ${formatScore(currentLevel.currentScore)}`);
       setScreen('result');
     } else {
       // 失败
-      setMessage(`❌ 第 ${currentLevel.level} 关失败！得分: ${currentLevel.currentScore}/${currentLevel.targetScore}`);
+      setMessage(`❌ 第 ${currentLevel.level} 关失败！得分: ${formatScore(currentLevel.currentScore)}/${formatScore(currentLevel.targetScore)}`);
       // 游戏结束，保存到排行榜
       const totalScore = gameRef.current.totalScore + currentLevel.currentScore;
       const newLeaderboard = addToLeaderboard(totalScore, currentLevel.level);
@@ -397,9 +398,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           <div key={index} className={styles.shopCard}>
             <h3>{card.name}</h3>
             <p>{card.description}</p>
-            {shopSlotIndex !== null ? (
+            {shopSlotIndex !== null && gameState.itemSlots.every(s => s.card) ? (
               <button onClick={() => replaceSlot(shopSlotIndex, card)}>
-                替换槽位 {shopSlotIndex + 1}
+                确认替换槽位 {shopSlotIndex + 1}
               </button>
             ) : (
               <button onClick={() => selectShopCard(card)}>
@@ -410,12 +411,22 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         ))}
       </div>
       
-      {/* 显示当前道具卡槽 */}
+      {/* 显示当前道具卡槽 - 槽位已满时可点击选择替换 */}
       <div className={styles.itemSlots}>
-        <h3>当前道具卡</h3>
+        <h3>当前道具卡 {gameState.itemSlots.every(s => s.card) && '(点击选择要替换的槽位)'}</h3>
         <div className={styles.slotsGrid}>
           {gameState.itemSlots.map((slot, index) => (
-            <div key={index} className={styles.slot}>
+            <div 
+              key={index} 
+              className={`${styles.slot} ${shopSlotIndex === index ? styles.selectedSlot : ''} ${gameState.itemSlots.every(s => s.card) ? styles.clickableSlot : ''}`}
+              onClick={() => {
+                if (gameState.itemSlots.every(s => s.card)) {
+                  // 槽位已满时，点击选择要替换的槽位
+                  setShopSlotIndex(index);
+                  setMessage(`已选择槽位 ${index + 1}（${slot.card?.name}），现在点击上方新卡确认替换`);
+                }
+              }}
+            >
               {slot.card ? (
                 <div className={styles.slotCard}>
                   <span>{slot.card.name}</span>
@@ -445,8 +456,8 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         {/* 顶部信息栏 */}
         <div className={styles.topBar}>
           <span>第 {levelState.level} 关</span>
-          <span>目标: {levelState.targetScore.toLocaleString()}</span>
-          <span>当前: {levelState.currentScore.toLocaleString()}</span>
+          <span>目标: {formatScore(levelState.targetScore)}</span>
+          <span>当前: {formatScore(levelState.currentScore)}</span>
           <span>胡牌: {levelState.totalWins}次</span>
         </div>
         
@@ -580,7 +591,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       
       {!gameState.gameOver && (
         <div className={styles.resultStats}>
-          <p>总得分: {gameState.totalScore.toLocaleString()}</p>
+          <p>总得分: {formatScore(gameState.totalScore)}</p>
           <p>当前关卡: {gameState.level}</p>
         </div>
       )}
@@ -607,7 +618,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                     <td>
                       {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank}
                     </td>
-                    <td>{entry.score.toLocaleString()}</td>
+                    <td>{formatScore(entry.score)}</td>
                     <td>第 {entry.level} 关</td>
                     <td>{entry.date}</td>
                   </tr>
@@ -648,7 +659,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       {/* 得分飘字动画 */}
       {scorePopup.visible && (
         <div className={styles.scorePopup}>
-          +{scorePopup.score}
+          +{formatScore(scorePopup.score)}
         </div>
       )}
       

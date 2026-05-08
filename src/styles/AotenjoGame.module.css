@@ -169,6 +169,21 @@
   border-color: #666;
 }
 
+.clickableSlot {
+  cursor: pointer;
+}
+
+.clickableSlot:hover {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.selectedSlot {
+  border-color: #ffd700 !important;
+  background: rgba(255, 215, 0, 0.2) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
 .slotCard {
   display: flex;
   flex-direction: column;
@@ -583,8 +598,8 @@
 
 .scoreGrid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
 }
 
 .scoreItem {
