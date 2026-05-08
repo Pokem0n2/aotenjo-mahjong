@@ -280,7 +280,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setUniversalDisplay(null);
     
     // 调用discardAndDraw：丢弃牌 + 自动摸新牌
-    const result = discardAndDraw(levelState.wall, levelState.hand, tile);
+    const result = discardAndDraw(levelState.wall, levelState.hand, tile, levelState.itemSlots);
     
     // 更新关卡状态
     const newLevel: LevelState = {

@@ -225,7 +225,12 @@ export function drawFromWall(wall: WallState, hand: HandState): { newHand: HandS
 }
 
 // ========== 弃牌：从手牌丢弃一张，然后自动摸新牌 ==========
-export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Tile): { 
+export function discardAndDraw(
+  wall: WallState,
+  hand: HandState,
+  discardTile: Tile,
+  itemSlots?: ItemSlot[]
+): { 
   newHand: HandState; 
   newWall: WallState; 
   drawnTile: Tile | null;
@@ -280,7 +285,14 @@ export function discardAndDraw(wall: WallState, hand: HandState, discardTile: Ti
     
     if (agariResult) {
       const baseScore = calculateBaseScore(finalHand);
-      const score = baseScore * bestFan;
+      let score = baseScore * bestFan;
+      
+      // 应用道具卡效果（负重前行等）
+      if (itemSlots && itemSlots.length > 0) {
+        const effectResult = applyItemEffects(baseScore * bestFan, bestPattern, itemSlots, finalHand);
+        score = effectResult.finalScore;
+      }
+      
       // 检查牌山是否已空
       const wallEmpty = drawResult.newWall.currentIndex >= drawResult.newWall.tiles.length;
       return {
