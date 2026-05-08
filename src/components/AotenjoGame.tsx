@@ -110,7 +110,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setLevelState(levelData);
     levelRef.current = levelData;
     setScreen('game');
-    setMessage(`第 ${level} 关 - 目标: ${levelData.targetScore}分 | 已自动摸入${levelData.hand.lastDraw ? TILE_NAMES[levelData.hand.lastDraw.id as import('../types/tile').TileId] : ''}，请选择一张牌丢弃`);
+    setMessage(`第 ${level} 关 - 目标: ${formatScore(levelData.targetScore)}分 | 已自动摸入${levelData.hand.lastDraw ? TILE_NAMES[levelData.hand.lastDraw.id as import('../types/tile').TileId] : ''}，请选择一张牌丢弃`);
     setScoreDetails([]);
     setAnimating(false); // 重置动画状态
     setUniversalDisplay(null); // 重置万能牌显示

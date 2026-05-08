@@ -371,16 +371,6 @@ export function calculateFu(
 }
 
 /**
- * 得分显示格式化
- */
-export function formatScore(score: number): string {
-  if (score >= 10000) {
-    return `${(score / 10000).toFixed(1)}万`;
-  }
-  return score.toLocaleString();
-}
-
-/**
  * 得分估算（用于提示）
  */
 export function estimateScore(

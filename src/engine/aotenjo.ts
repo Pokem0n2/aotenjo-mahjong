@@ -358,7 +358,7 @@ export function discardAndDraw(
         newHand: finalHand,
         newWall: drawResult.newWall,
         drawnTile: null,
-        message: `胡牌！${bestPattern} ${bestFan}番 ${score}分`,
+        message: `胡牌！${bestPattern} ${bestFan}番 ${formatScore(score)}分`,
         isWin: true,
         winPattern: bestPattern,
         winFan: bestFan,
