@@ -252,6 +252,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     
     setAnimating(true);
     
+    // 点击弃牌时，清除万能牌临时显示（恢复为问号）
+    setUniversalDisplay(null);
+    
     // 调用discardAndDraw：丢弃牌 + 自动摸新牌
     const result = discardAndDraw(levelState.wall, levelState.hand, tile);
     
@@ -308,6 +311,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       }, 1000);
     } else {
       // 正常摸到新牌，继续游戏
+      // 检查新摸的牌是否触发万能牌胡牌（已在discardAndDraw中处理）
       setAnimating(false);
       setMessage(result.message);
     }
