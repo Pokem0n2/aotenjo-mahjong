@@ -191,8 +191,9 @@ export function createLevel(level: number, itemSlots: ItemSlot[], cheatMode: boo
   // 8. 更新牌山：currentIndex推进到1（第一张已摸走）
   wall.currentIndex = 1;
   
-  // 9. 计算目标分数
-  const targetScore = level === 1 ? 100 : Math.pow(5, level - 1) * 2000;
+  // 9. 计算目标分数：第1关为基础分(默认100)，之后每关是上一关的5倍
+  const BASE_TARGET_SCORE = 100;
+  const targetScore = level === 1 ? BASE_TARGET_SCORE : BASE_TARGET_SCORE * Math.pow(5, level - 1);
   
   return {
     level,
