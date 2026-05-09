@@ -601,28 +601,28 @@ export function applyItemEffects(
       case 'binbin':
         if (pattern === '清一色' || pattern.indexOf('筒') >= 0) {
           score *= 10;
-          details.push(`[槽${i+1}] ${card.name} ×10 = ${Math.floor(score)}`);
+          details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
         }
         break;
         
       case 'wanwan':
         if (pattern === '清一色' || pattern.indexOf('万') >= 0) {
           score *= 10;
-          details.push(`[槽${i+1}] ${card.name} ×10 = ${Math.floor(score)}`);
+          details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
         }
         break;
         
       case 'guoshi':
         if (pattern === '国士无双') {
           score *= 52;
-          details.push(`[槽${i+1}] ${card.name} ×52 = ${Math.floor(score)}`);
+          details.push(`[槽${i+1}] ${card.name} ×52 = ${formatScore(Math.floor(score))}`);
         }
         break;
         
       case 'tongtian':
         if (pattern === '清一色' || pattern.indexOf('条') >= 0) {
           score *= slot.multiplier;
-          details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${Math.floor(score)}`);
+          details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${formatScore(Math.floor(score))}`);
         }
         break;
     }
