@@ -470,37 +470,38 @@ export function evaluateHandWithUniversal(handTiles: Tile[]): BestUniversalResul
     const shanten = calculateShanten(tiles34);
     const waits = getTenpaiTiles(tiles34);
 
-    if (waits.length > 0) {
-      // 听牌了！遍历所有听牌，找得分最高的
-      let bestTileId: TileId | null = null;
-      let bestFan = 0;
-      let bestPattern = '一般';
+      if (waits.length > 0) {
+        // 听牌了！遍历所有听牌，找得分最高的
+        let bestTileId: TileId | null = null;
+        let bestFan = 0;
+        let bestPattern = '一般';
 
-      for (const waitTileId of waits) {
-        // 模拟摸入这张牌
-        const tempTiles = [...tiles34];
-        const idx = ALL_TILE_IDS.indexOf(waitTileId);
-        tempTiles[idx]++;
-        
-        // 计算牌型得分（简化版）
-        const fan = calculatePatternFan(tempTiles);
-        
-        if (fan > bestFan) {
-          bestFan = fan;
-          bestTileId = waitTileId;
-          // TODO: 根据牌型确定pattern名称
+        for (const waitTileId of waits) {
+          // 模拟摸入这张牌
+          const tempTiles = [...tiles34];
+          const idx = ALL_TILE_IDS.indexOf(waitTileId);
+          tempTiles[idx]++;
+          
+          // 计算牌型得分（简化版）
+          const fan = calculatePatternFan(tempTiles);
+          
+          if (fan > bestFan) {
+            bestFan = fan;
+            bestTileId = waitTileId;
+            // 根据牌型确定pattern名称
+            bestPattern = getPatternName(tempTiles);
+          }
         }
-      }
 
-      return {
-        bestTileId: bestTileId || waits[0],
-        isAgari: true,
-        pattern: bestPattern,
-        fan: bestFan || 1,
-        shanten: SHANTEN_TENPAI,
-        waits,
-      };
-    }
+        return {
+          bestTileId: bestTileId || waits[0],
+          isAgari: true,
+          pattern: bestPattern,
+          fan: bestFan || 1,
+          shanten: SHANTEN_TENPAI,
+          waits,
+        };
+      }
 
     // 未听牌，返回向听数
     return {
@@ -580,6 +581,66 @@ function calculatePatternFan(tiles34: number[]): number {
   }
   
   return fan;
+}
+
+/**
+ * 根据34张牌数组获取牌型名称
+ * 用于道具卡触发判定（如通天藤蔓需要知道是条/筒/万一色）
+ */
+function getPatternName(tiles34: number[]): string {
+  // 检查七对子
+  let pairs = 0;
+  for (const c of tiles34) {
+    if (c === 2) pairs++;
+    if (c === 4) pairs += 2;
+  }
+  if (pairs === 7) return '七对子';
+  
+  // 检查国士无双
+  const yaochuIndices = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
+  let hasAllYaochu = true;
+  let hasPair = false;
+  for (const idx of yaochuIndices) {
+    if (tiles34[idx] === 0) hasAllYaochu = false;
+    if (tiles34[idx] >= 2) hasPair = true;
+  }
+  if (hasAllYaochu && hasPair) return '国士无双';
+  
+  // 检查清一色/混一色，并返回具体花色
+  let suitCounts = { m: 0, p: 0, s: 0, z: 0 };
+  for (let i = 0; i < 34; i++) {
+    if (tiles34[i] > 0) {
+      if (i < 9) suitCounts.m += tiles34[i];
+      else if (i < 18) suitCounts.p += tiles34[i];
+      else if (i < 27) suitCounts.s += tiles34[i];
+      else suitCounts.z += tiles34[i];
+    }
+  }
+  
+  const nonZeroSuits = [];
+  if (suitCounts.m > 0) nonZeroSuits.push('m');
+  if (suitCounts.p > 0) nonZeroSuits.push('p');
+  if (suitCounts.s > 0) nonZeroSuits.push('s');
+  if (suitCounts.z > 0) nonZeroSuits.push('z');
+  
+  if (nonZeroSuits.length === 1) {
+    if (suitCounts.m > 0) return '清一色(万)';
+    if (suitCounts.p > 0) return '清一色(筒)';
+    if (suitCounts.s > 0) return '清一色(条)';
+  } else if (nonZeroSuits.length === 2 && suitCounts.z > 0) {
+    if (suitCounts.m > 0) return '混一色(万)';
+    if (suitCounts.p > 0) return '混一色(筒)';
+    if (suitCounts.s > 0) return '混一色(条)';
+  }
+  
+  // 检查对对和
+  let kotsuCount = 0;
+  for (const c of tiles34) {
+    if (c >= 3) kotsuCount++;
+  }
+  if (kotsuCount >= 4) return '对对和';
+  
+  return '一般';
 }
 
 /**

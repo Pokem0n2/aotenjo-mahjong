@@ -592,21 +592,21 @@ export function applyItemEffects(
         break;
         
       case 'tiaotiao':
-        if (pattern === '清一色' || pattern.indexOf('条') >= 0) {
+        if (pattern === '清一色' || pattern.indexOf('条') >= 0 || pattern.indexOf('清一色(条)') >= 0) {
           score *= 10;
           details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
         }
         break;
         
       case 'binbin':
-        if (pattern === '清一色' || pattern.indexOf('筒') >= 0) {
+        if (pattern === '清一色' || pattern.indexOf('筒') >= 0 || pattern.indexOf('清一色(筒)') >= 0) {
           score *= 10;
           details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
         }
         break;
         
       case 'wanwan':
-        if (pattern === '清一色' || pattern.indexOf('万') >= 0) {
+        if (pattern === '清一色' || pattern.indexOf('万') >= 0 || pattern.indexOf('清一色(万)') >= 0) {
           score *= 10;
           details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
         }
@@ -620,7 +620,7 @@ export function applyItemEffects(
         break;
         
       case 'tongtian':
-        if (pattern === '清一色' || pattern.indexOf('条') >= 0) {
+        if (pattern === '清一色' || pattern.indexOf('条') >= 0 || pattern.indexOf('清一色(条)') >= 0) {
           score *= slot.multiplier;
           details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${formatScore(Math.floor(score))}`);
         }
