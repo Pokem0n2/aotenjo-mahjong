@@ -157,6 +157,37 @@ export function addToLeaderboard(score: number, level: number): LeaderboardEntry
   return topEntries;
 }
 
+// ========== 测试模式配置 ==========
+let TEST_MODE = false;
+
+export function setTestMode(enabled: boolean): void {
+  TEST_MODE = enabled;
+}
+
+export function isTestMode(): boolean {
+  return TEST_MODE;
+}
+
+// ========== 创建条一色测试牌组 ==========
+function createTestDeck(): Tile[] {
+  const deck: Tile[] = [];
+  // 条子牌 (1s-9s)，每种4张 = 36张
+  const souIds: TileId[] = ['1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s'];
+  for (const id of souIds) {
+    for (let i = 0; i < 4; i++) {
+      deck.push(createTile(id));
+    }
+  }
+  // 填充到136张（剩余100张用万子）
+  const manIds: TileId[] = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m'];
+  let manIdx = 0;
+  while (deck.length < 136) {
+    deck.push(createTile(manIds[manIdx % 9]));
+    manIdx++;
+  }
+  return deck;
+}
+
 // ========== 创建完整牌组（136张） ==========
 function createFullDeck(): Tile[] {
   const deck: Tile[] = [];
@@ -175,8 +206,8 @@ function hasWuxiangTianyin(itemSlots: ItemSlot[]): boolean {
 
 // ========== 创建关卡：发13张手牌 + 36张牌山 ==========
 export function createLevel(level: number, itemSlots: ItemSlot[], cheatMode: boolean = false): LevelState {
-  // 1. 创建136张完整牌组并洗牌
-  const fullDeck = createFullDeck();
+  // 1. 创建牌组（测试模式用条一色牌组）
+  const fullDeck = TEST_MODE ? createTestDeck() : createFullDeck();
   const shuffled = shuffleDeck(fullDeck);
   
   // 2. 检查是否有万象天引

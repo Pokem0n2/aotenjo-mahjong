@@ -47,6 +47,19 @@
   box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
 }
 
+.testModeButton {
+  padding: 10px 30px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.testModeButton:hover {
+  transform: scale(1.05);
+}
+
 .rules {
   margin-top: 40px;
   padding: 20px;

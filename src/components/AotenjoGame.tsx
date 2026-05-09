@@ -7,7 +7,8 @@ import {
   discardAndDraw, checkWin, calculateBaseScore, applyItemEffects,
   tileToId, drawFromWall, autoDiscardAfterWin,
   addToLeaderboard, getLeaderboard, LeaderboardEntry,
-  formatScore
+  formatScore,
+  setTestMode, isTestMode
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES, TileId } from '../types/tile';
 import { handDiscard } from '../engine/hand';
@@ -300,10 +301,12 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     levelRef.current = newLevel;
     
     if (result.isWin) {
-      // 胡牌了！累加得分到关卡总分
+      // 胡牌了！累加得分到关卡总分，并更新道具卡效果
+      const updatedItems = updateItemsAfterWin(newLevel.itemSlots, result.winPattern);
       const updatedLevel: LevelState = {
         ...newLevel,
-        currentScore: newLevel.currentScore + result.winScore
+        currentScore: newLevel.currentScore + result.winScore,
+        itemSlots: updatedItems
       };
       setLevelState(updatedLevel);
       levelRef.current = updatedLevel;
@@ -376,6 +379,21 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       <button className={styles.startButton} onClick={startNewGame}>
         开始游戏
       </button>
+      <button 
+        className={styles.testModeButton} 
+        onClick={() => {
+          const newMode = !isTestMode();
+          setTestMode(newMode);
+          setMessage(newMode ? '测试模式已开启：条一色牌组' : '测试模式已关闭：常规牌组');
+        }}
+        style={{ 
+          marginTop: '15px',
+          background: isTestMode() ? '#ff6b6b' : '#444',
+          color: isTestMode() ? '#fff' : '#aaa'
+        }}
+      >
+        {isTestMode() ? '测试模式：ON（条一色牌组）' : '测试模式：OFF（常规牌组）'}
+      </button>
       <div className={styles.rules}>
         <h3>游戏规则</h3>
         <p>1. 每关从完整日麻牌组中发13张手牌</p>
@@ -434,7 +452,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
               }}
             >
               {slot.card ? (
-                <div className={styles.slotCard}>
+                <div className={styles.slotCard} title={slot.card.description}>
                   <span>{slot.card.name}</span>
                   {slot.multiplier !== 1 && (
                     <span className={styles.multiplier}>×{slot.multiplier.toFixed(2)}</span>
