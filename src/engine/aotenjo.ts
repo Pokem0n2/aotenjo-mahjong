@@ -745,23 +745,16 @@ export function updateItemsAfterLevel(itemSlots: ItemSlot[]): ItemSlot[] {
 // ========== 胡牌后更新道具卡 ==========
 export function updateItemsAfterWin(
   itemSlots: ItemSlot[], 
-  pattern: string,
-  universalTileId?: TileId | null
+  pattern: string
 ): ItemSlot[] {
   return itemSlots.map(slot => {
     if (!slot.card) return slot;
     
     const newSlot = { ...slot };
     
-    // 通天藤蔓：检查万能牌临时变成的牌是否是条子牌
-    // 条子牌索引：18-26 (1s-9s)
-    if (slot.card.id === 'tongtian') {
-      const isTongtianActive = universalTileId 
-        ? ALL_TILE_IDS.indexOf(universalTileId) >= 18 && ALL_TILE_IDS.indexOf(universalTileId) <= 26
-        : (pattern.indexOf('条') >= 0 || pattern === '清一色');
-      if (isTongtianActive) {
-        newSlot.multiplier *= 1.1;
-      }
+    // 通天藤蔓：胡牌牌型为清一色(条)时触发
+    if (slot.card.id === 'tongtian' && pattern === '清一色(条)') {
+      newSlot.multiplier *= 1.1;
     }
     
     return newSlot;
