@@ -147,10 +147,11 @@
 }
 
 .slotsGrid {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .slot {
@@ -741,6 +742,29 @@
   color: #888;
   text-align: center;
   padding: 20px;
+}
+
+/* ========== 商店跳过按钮 ========== */
+.skipShop {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.skipBtn {
+  padding: 12px 30px;
+  font-size: 1rem;
+  background: #666;
+  color: #ccc;
+  border: 2px solid #888;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.skipBtn:hover {
+  background: #888;
+  color: #fff;
+  border-color: #aaa;
 }
 
 /* ========== 响应式 ========== */

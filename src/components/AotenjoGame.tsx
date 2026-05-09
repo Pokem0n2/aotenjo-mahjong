@@ -398,10 +398,16 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           <div key={index} className={styles.shopCard}>
             <h3>{card.name}</h3>
             <p>{card.description}</p>
-            {shopSlotIndex !== null && gameState.itemSlots.every(s => s.card) ? (
-              <button onClick={() => replaceSlot(shopSlotIndex, card)}>
-                确认替换槽位 {shopSlotIndex + 1}
-              </button>
+            {gameState.itemSlots.every(s => s.card) ? (
+              shopSlotIndex !== null ? (
+                <button onClick={() => replaceSlot(shopSlotIndex, card)}>
+                  确认替换槽位 {shopSlotIndex + 1}
+                </button>
+              ) : (
+                <button disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                  请先点击下方槽位选择替换目标
+                </button>
+              )
             ) : (
               <button onClick={() => selectShopCard(card)}>
                 选择
@@ -441,6 +447,22 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           ))}
         </div>
       </div>
+      
+      {/* 槽位已满时显示跳过按钮 */}
+      {gameState.itemSlots.every(s => s.card) && (
+        <div className={styles.skipShop}>
+          <button 
+            className={styles.skipBtn} 
+            onClick={() => {
+              // 直接跳过商店，不获取任何道具卡，进入关卡
+              setMessage('已跳过本次道具卡，直接进入关卡');
+              startLevel(gameRef.current.level, gameRef.current.itemSlots);
+            }}
+          >
+            跳过（不获取道具卡，直接进入关卡）
+          </button>
+        </div>
+      )}
     </div>
   );
 
