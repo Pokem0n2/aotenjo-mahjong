@@ -302,7 +302,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     
     if (result.isWin) {
       // 胡牌了！累加得分到关卡总分，并更新道具卡效果
-      const updatedItems = updateItemsAfterWin(newLevel.itemSlots, result.winPattern);
+      const updatedItems = updateItemsAfterWin(newLevel.itemSlots, result.winPattern, result.universalDisplayTile);
       const updatedLevel: LevelState = {
         ...newLevel,
         currentScore: newLevel.currentScore + result.winScore,

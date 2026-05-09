@@ -651,7 +651,15 @@ export function applyItemEffects(
         break;
         
       case 'tongtian':
-        if (pattern === '清一色' || pattern.indexOf('条') >= 0 || pattern.indexOf('清一色(条)') >= 0) {
+        // 通天藤蔓：检查万能牌临时变成的牌是否是条子牌
+        // 条子牌索引：18-26 (1s-9s)
+        const hasTongtianUniversal = universalTiles.length > 0 && universalTiles.some(tile => {
+          const idx = ALL_TILE_IDS.indexOf(tile.id as TileId);
+          return idx >= 18 && idx <= 26;
+        });
+        // 兼容旧逻辑：如果universalTiles为空，检查pattern
+        const isTongtianPattern = pattern === '清一色' || pattern.indexOf('条') >= 0 || pattern.indexOf('清一色(条)') >= 0;
+        if (hasTongtianUniversal || (universalTiles.length === 0 && isTongtianPattern)) {
           score *= slot.multiplier;
           details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${formatScore(Math.floor(score))}`);
         }
@@ -735,14 +743,25 @@ export function updateItemsAfterLevel(itemSlots: ItemSlot[]): ItemSlot[] {
 }
 
 // ========== 胡牌后更新道具卡 ==========
-export function updateItemsAfterWin(itemSlots: ItemSlot[], pattern: string): ItemSlot[] {
+export function updateItemsAfterWin(
+  itemSlots: ItemSlot[], 
+  pattern: string,
+  universalTileId?: TileId | null
+): ItemSlot[] {
   return itemSlots.map(slot => {
     if (!slot.card) return slot;
     
     const newSlot = { ...slot };
     
-    if (slot.card.id === 'tongtian' && (pattern.indexOf('条') >= 0 || pattern === '清一色')) {
-      newSlot.multiplier *= 1.1;
+    // 通天藤蔓：检查万能牌临时变成的牌是否是条子牌
+    // 条子牌索引：18-26 (1s-9s)
+    if (slot.card.id === 'tongtian') {
+      const isTongtianActive = universalTileId 
+        ? ALL_TILE_IDS.indexOf(universalTileId) >= 18 && ALL_TILE_IDS.indexOf(universalTileId) <= 26
+        : (pattern.indexOf('条') >= 0 || pattern === '清一色');
+      if (isTongtianActive) {
+        newSlot.multiplier *= 1.1;
+      }
     }
     
     return newSlot;
