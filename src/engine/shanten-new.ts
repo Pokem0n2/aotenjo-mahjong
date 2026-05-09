@@ -477,7 +477,7 @@ export function evaluateHandWithUniversal(handTiles: Tile[]): BestUniversalResul
         let bestPattern = '一般';
 
         for (const waitTileId of waits) {
-          // 模拟摸入这张牌
+          // 模拟摸入这张牌（万能牌变成这张牌）
           const tempTiles = [...tiles34];
           const idx = ALL_TILE_IDS.indexOf(waitTileId);
           tempTiles[idx]++;
@@ -490,6 +490,22 @@ export function evaluateHandWithUniversal(handTiles: Tile[]): BestUniversalResul
             bestTileId = waitTileId;
             // 根据牌型确定pattern名称
             bestPattern = getPatternName(tempTiles);
+          }
+        }
+        
+        // 用户要求：万能牌临时变成什么牌，就把它当什么牌来判定清一色
+        // 条子索引18-26，万子索引0-8，筒子索引9-17
+        if (bestTileId) {
+          const bestIdx = ALL_TILE_IDS.indexOf(bestTileId);
+          if (bestIdx >= 18 && bestIdx <= 26) {
+            bestPattern = '清一色(条)';
+            bestFan = Math.max(bestFan, 6);
+          } else if (bestIdx >= 0 && bestIdx <= 8) {
+            bestPattern = '清一色(万)';
+            bestFan = Math.max(bestFan, 6);
+          } else if (bestIdx >= 9 && bestIdx <= 17) {
+            bestPattern = '清一色(筒)';
+            bestFan = Math.max(bestFan, 6);
           }
         }
 
