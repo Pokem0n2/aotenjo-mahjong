@@ -178,10 +178,10 @@ function createTestDeck(): Tile[] {
       deck.push(createTile(id));
     }
   }
-  // 填充到136张（剩余100张用万子）
+  // 填充到50张（剩余14张用万子）
   const manIds: TileId[] = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m'];
   let manIdx = 0;
-  while (deck.length < 136) {
+  while (deck.length < 50) {
     deck.push(createTile(manIds[manIdx % 9]));
     manIdx++;
   }
