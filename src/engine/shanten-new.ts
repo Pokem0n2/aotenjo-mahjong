@@ -587,7 +587,7 @@ function calculatePatternFan(tiles34: number[]): number {
  * 根据34张牌数组获取牌型名称
  * 用于道具卡触发判定（如通天藤蔓需要知道是条/筒/万一色）
  */
-function getPatternName(tiles34: number[]): string {
+export function getPatternName(tiles34: number[]): string {
   // 检查七对子
   let pairs = 0;
   for (const c of tiles34) {

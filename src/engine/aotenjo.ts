@@ -1,7 +1,7 @@
 import { Tile, TileId, Suit, ALL_TILE_IDS, createTile, shuffleDeck, handToCounts, TILE_NAMES, UNIVERSAL_TILE_ID, createUniversalTile } from '../types/tile';
 import { HandState, createHand, initHand, handDraw, handDiscard } from './hand';
 import { AgariResult } from './agari';
-import { tilesTo34, isAgariWithShanten, evaluateHandWithUniversal } from './shanten-new';
+import { tilesTo34, isAgariWithShanten, evaluateHandWithUniversal, getPatternName } from './shanten-new';
 
 // ========== 牌山状态 ==========
 export interface WallState {
@@ -331,6 +331,7 @@ export function discardAndDraw(
   winScore: number;
   isWallEmpty: boolean; // 牌山是否已空
   universalDisplayTile: TileId | null; // 万能牌临时显示的牌ID（胡牌时）
+  scoreFormula: string; // 得分计算公式
 } {
   // 1. 丢弃选中的牌
   const tileIndex = hand.tiles.findIndex(t => t.id === discardTile.id);
@@ -368,7 +369,7 @@ export function discardAndDraw(
       const tiles34 = tilesTo34(finalHand.tiles);
       if (isAgariWithShanten(tiles34)) {
         agariResult = { isAgari: true, form: 'standard', melds: [], waits: [], isTsumo: true, isMenzen: true };
-        bestPattern = '一般';
+        bestPattern = getPatternName(tiles34);  // 使用正确的牌型识别
         bestFan = calculateFan(bestPattern, finalHand);
       }
     }
@@ -385,6 +386,26 @@ export function discardAndDraw(
       
       // 检查牌山是否已空
       const wallEmpty = drawResult.newWall.currentIndex >= drawResult.newWall.tiles.length;
+      
+      // 构建得分计算公式
+      const formulaParts: string[] = [];
+      formulaParts.push(`基础分${baseScore}`);
+      formulaParts.push(`×${bestFan}番`);
+      if (itemSlots && itemSlots.length > 0) {
+        const effectResult = applyItemEffects(baseScore * bestFan, bestPattern, itemSlots, finalHand);
+        if (effectResult.finalScore !== baseScore * bestFan) {
+          // 有道具卡加成，显示具体加成
+          const multiplier = effectResult.details.filter(d => d.indexOf('×') >= 0).map(d => {
+            const match = d.match(/×([\d.]+)/);
+            return match ? match[1] : '';
+          }).filter(Boolean);
+          if (multiplier.length > 0) {
+            formulaParts.push(`×${multiplier.join('×')}倍率`);
+          }
+        }
+      }
+      const scoreFormula = formulaParts.join(' ') + ` = ${formatScore(score)}分`;
+      
       return {
         newHand: finalHand,
         newWall: drawResult.newWall,
@@ -395,7 +416,8 @@ export function discardAndDraw(
         winFan: bestFan,
         winScore: score,
         isWallEmpty: wallEmpty,
-        universalDisplayTile: bestTileId
+        universalDisplayTile: bestTileId,
+        scoreFormula
       };
     }
   }
@@ -415,7 +437,8 @@ export function discardAndDraw(
       winFan: 0,
       winScore: 0,
       isWallEmpty: true,
-      universalDisplayTile: null
+      universalDisplayTile: null,
+      scoreFormula: ''
     };
   }
   
@@ -430,7 +453,8 @@ export function discardAndDraw(
     winFan: 0,
     winScore: 0,
     isWallEmpty: false,
-    universalDisplayTile: null
+    universalDisplayTile: null,
+    scoreFormula: ''
   };
 }
 
@@ -508,7 +532,8 @@ export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean;
   // 使用向听数计算判定胡牌（直接对14张牌判定）
   const tiles34 = tilesTo34(hand.tiles);
   if (isAgariWithShanten(tiles34)) {
-    const pattern = '一般';
+    // 正确识别牌型名称
+    const pattern = getPatternName(tiles34);
     const fan = calculateFan(pattern, hand);
     const baseScore = calculateBaseScore(hand);
     return {
@@ -523,7 +548,7 @@ export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean;
 }
 
 // ========== 根据和了形态获取牌型名称 ==========
-function getPatternName(form?: string): string {
+function getPatternNameFromForm(form?: string): string {
   const patternMap: Record<string, string> = {
     'standard': '一般',
     'chiitoitsu': '七对子',
