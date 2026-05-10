@@ -12,6 +12,7 @@ import {
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES, TileId } from '../types/tile';
 import { handDiscard } from '../engine/hand';
+import { getWaitsAfterDiscard } from '../engine/shanten-new';
 
 // ========== 游戏画面类型 ==========
 type Screen = 'title' | 'shop' | 'game' | 'result';
@@ -32,6 +33,13 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const [shopSlotIndex, setShopSlotIndex] = useState<number | null>(null);
   const [animating, setAnimating] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  
+  // 悬停预览听牌状态
+  const [hoverPreview, setHoverPreview] = useState<{
+    tileIndex: number;
+    waits: TileId[];
+    visible: boolean;
+  }>({ tileIndex: -1, waits: [], visible: false });
   
   // 使用ref来避免闭包问题
   const levelRef = useRef<LevelState | null>(null);
@@ -565,36 +573,66 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
               const isUniversal = tile.id === 'universal';
               
               return (
-                <button
+                <div
                   key={`${tile.id}-${index}`}
-                  className={`${styles.handTile} ${isLastDraw ? styles.lastDrawHighlight : ''} ${isUniversal ? styles.universalTile : ''} ${animating ? styles.disabled : ''}`}
-                  onClick={() => {
-                    if (!animating && !isUniversal) {
-                      discardTile(tile);
+                  className={styles.handTileWrapper}
+                  onMouseEnter={() => {
+                    if (!animating && !isUniversal && levelState) {
+                      const waits = getWaitsAfterDiscard(levelState.hand.tiles, index);
+                      setHoverPreview({ tileIndex: index, waits, visible: true });
                     }
                   }}
-                  disabled={animating || isUniversal}
-                  title={isUniversal ? "万象天引-万能牌（不可丢弃）" : isLastDraw ? "刚摸到的牌，点击丢弃" : "点击丢弃此牌"}
+                  onMouseLeave={() => {
+                    setHoverPreview({ tileIndex: -1, waits: [], visible: false });
+                  }}
                 >
-                  {isUniversal ? (
-                    universalDisplay ? (
+                  <button
+                    className={`${styles.handTile} ${isLastDraw ? styles.lastDrawHighlight : ''} ${isUniversal ? styles.universalTile : ''} ${animating ? styles.disabled : ''}`}
+                    onClick={() => {
+                      if (!animating && !isUniversal) {
+                        discardTile(tile);
+                      }
+                    }}
+                    disabled={animating || isUniversal}
+                    title={isUniversal ? "万象天引-万能牌（不可丢弃）" : isLastDraw ? "刚摸到的牌，点击丢弃" : "点击丢弃此牌"}
+                  >
+                    {isUniversal ? (
+                      universalDisplay ? (
+                        <img
+                          src={`/tiles/${universalDisplay}.png`}
+                          alt={universalDisplay}
+                          className={styles.tileImg}
+                        />
+                      ) : (
+                        <div className={styles.universalIcon}>?</div>
+                      )
+                    ) : (
                       <img
-                        src={`/tiles/${universalDisplay}.png`}
-                        alt={universalDisplay}
+                        src={`/tiles/${tile.id}.png`}
+                        alt={tile.id}
                         className={styles.tileImg}
                       />
-                    ) : (
-                      <div className={styles.universalIcon}>?</div>
-                    )
-                  ) : (
-                    <img
-                      src={`/tiles/${tile.id}.png`}
-                      alt={tile.id}
-                      className={styles.tileImg}
-                    />
+                    )}
+                    {isLastDraw && <div className={styles.newBadge}>新</div>}
+                  </button>
+                  
+                  {/* 悬停浮窗 - 显示丢弃后的听牌 */}
+                  {hoverPreview.visible && hoverPreview.tileIndex === index && hoverPreview.waits.length > 0 && (
+                    <div className={styles.hoverTooltip}>
+                      <div className={styles.tooltipTitle}>丢弃后听牌：</div>
+                      <div className={styles.tooltipWaits}>
+                        {hoverPreview.waits.map((waitId, i) => (
+                          <img
+                            key={`wait-${i}`}
+                            src={`/tiles/${waitId}.png`}
+                            alt={waitId}
+                            className={styles.tooltipTileImg}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   )}
-                  {isLastDraw && <div className={styles.newBadge}>新</div>}
-                </button>
+                </div>
               );
             })}
           </div>

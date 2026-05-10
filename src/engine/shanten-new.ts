@@ -674,3 +674,38 @@ export function getTenpaiInfo(handTiles: Tile[]): TenpaiInfo {
     shanten,
   };
 }
+
+/**
+ * 计算丢弃某张牌后的听牌列表
+ * 用于悬停预览功能
+ * 
+ * @param handTiles 当前手牌（14张）
+ * @param discardIndex 要丢弃的牌索引
+ * @returns 听牌列表（TileId数组），如果丢弃后未听牌则返回空数组
+ */
+export function getWaitsAfterDiscard(handTiles: Tile[], discardIndex: number): TileId[] {
+  // 检查索引有效性
+  if (discardIndex < 0 || discardIndex >= handTiles.length) {
+    return [];
+  }
+  
+  // 创建丢弃后的13张牌数组
+  const remainingTiles = handTiles.filter((_, i) => i !== discardIndex);
+  
+  // 检查是否有万能牌
+  const hasUniversal = remainingTiles.some(t => t.id === 'universal');
+  
+  if (hasUniversal) {
+    // 有万能牌：使用 evaluateHandWithUniversal 计算最佳听牌
+    const evalResult = evaluateHandWithUniversal(remainingTiles);
+    if (evalResult.isAgari) {
+      return evalResult.waits;
+    }
+  } else {
+    // 无万能牌：直接计算13张牌的听牌列表
+    const tiles34 = tilesTo34(remainingTiles);
+    return getTenpaiTiles(tiles34);
+  }
+  
+  return [];
+}
