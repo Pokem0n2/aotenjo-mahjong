@@ -147,7 +147,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       currentScore: newScore,
       lastWinScore: finalScore,
       totalWins: newTotalWins,
-      itemSlots: updateItemsAfterWin(currentLevel.itemSlots, patternName)
+      itemSlots: updateItemsAfterWin(currentLevel.itemSlots, pattern)
     };
     
     setLevelState(newLevel);
@@ -327,7 +327,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       
       // 记录得分详情（新得分插入到开头，按时间倒序排列）
       setScoreDetails(prev => {
-        const newDetail = `${result.winPattern} ${result.winFan}番 +${formatScore(result.winScore)}分 | ${result.scoreFormula}`;
+        const newDetail = `${result.winPattern.name} ${result.winFan}番 +${formatScore(result.winScore)}分 | ${result.scoreFormula}`;
         return [newDetail, ...prev]; // 新得分在最前面
       });
       

@@ -327,7 +327,7 @@ export function discardAndDraw(
   drawnTile: Tile | null;
   message: string;
   isWin: boolean;  // 是否胡牌
-  winPattern: string;
+  winPattern: PatternResult;
   winFan: number;
   winScore: number;
   isWallEmpty: boolean; // 牌山是否已空
@@ -351,7 +351,8 @@ export function discardAndDraw(
     const hasUniversal = finalHand.tiles.some(t => t.id === UNIVERSAL_TILE_ID);
     
     let agariResult: AgariResult | null = null;
-    let bestPattern = '';
+    let bestPatternResult: PatternResult = { name: '' };
+    let bestPatternName = '';
     let bestFan = 0;
     
     let bestTileId: TileId | null = null;
@@ -361,7 +362,7 @@ export function discardAndDraw(
       const evalResult = evaluateHandWithUniversal(finalHand.tiles);
       if (evalResult.isAgari) {
         agariResult = { isAgari: true, form: 'standard', melds: [], waits: [], isTsumo: true, isMenzen: true };
-        bestPattern = evalResult.pattern;
+        bestPatternName = evalResult.pattern;
         bestFan = evalResult.fan;
         bestTileId = evalResult.bestTileId;
       }
@@ -370,8 +371,8 @@ export function discardAndDraw(
       const tiles34 = tilesTo34(finalHand.tiles);
       if (isAgariWithShanten(tiles34)) {
         agariResult = { isAgari: true, form: 'standard', melds: [], waits: [], isTsumo: true, isMenzen: true };
-        bestPattern = detectPattern(tiles34);
-        bestFan = calculateFan(bestPattern, finalHand);
+        bestPatternName = detectPattern(tiles34);
+        bestFan = calculateFan(bestPatternName, finalHand);
       }
     }
     
@@ -420,9 +421,9 @@ export function discardAndDraw(
         newHand: finalHand,
         newWall: drawResult.newWall,
         drawnTile: null,
-        message: `胡牌！${bestPattern} ${bestFan}番 ${formatScore(score)}分`,
+        message: `胡牌！${bestPatternName} ${bestFan}番 ${formatScore(score)}分`,
         isWin: true,
-        winPattern: bestPattern,
+        winPattern: patternResult,
         winFan: bestFan,
         winScore: score,
         isWallEmpty: wallEmpty,
@@ -443,7 +444,7 @@ export function discardAndDraw(
       drawnTile: null,
       message: '牌山已空！请丢弃一张手牌进行最终结算',
       isWin: false,
-      winPattern: '',
+      winPattern: { name: '' },
       winFan: 0,
       winScore: 0,
       isWallEmpty: true,
@@ -459,7 +460,7 @@ export function discardAndDraw(
     drawnTile: drawResult.tile,
     message: `摸到 ${TILE_NAMES[drawResult.tile!.id as TileId]}，请选择一张牌丢弃`,
     isWin: false,
-    winPattern: '',
+    winPattern: { name: '' },
     winFan: 0,
     winScore: 0,
     isWallEmpty: false,
@@ -775,15 +776,15 @@ export function updateItemsAfterLevel(itemSlots: ItemSlot[]): ItemSlot[] {
 // ========== 胡牌后更新道具卡 ==========
 export function updateItemsAfterWin(
   itemSlots: ItemSlot[], 
-  pattern: string
+  patternResult: PatternResult
 ): ItemSlot[] {
   return itemSlots.map(slot => {
     if (!slot.card) return slot;
     
     const newSlot = { ...slot };
     
-    // 通天藤蔓：胡牌牌型为清一色(条)时触发
-    if (slot.card.id === 'tongtian' && pattern === '清一色(条)') {
+    // 通天藤蔓：胡牌牌型为条一色（清一色(条) 或 九莲宝灯(条)）时触发
+    if (slot.card.id === 'tongtian' && isSuitPattern(patternResult, 's')) {
       newSlot.multiplier *= 1.1;
     }
     
