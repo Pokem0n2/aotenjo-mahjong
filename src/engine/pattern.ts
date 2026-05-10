@@ -91,7 +91,8 @@ export function detectPatternWithSuit(tiles34: number[]): PatternResult {
       }
 
       const totalTiles = tiles34.reduce((sum, c) => sum + c, 0);
-      if (hasAllNine && tiles34[suitStart] >= 2 && tiles34[suitStart + 8] >= 2 && totalTiles === 14) {
+      // 九莲宝灯：1和9至少3张，2-8至少1张，总共14张
+      if (hasAllNine && tiles34[suitStart] >= 3 && tiles34[suitStart + 8] >= 3 && totalTiles === 14) {
         const suit = nonZero[0] as SuitType;
         return { name: '九莲宝灯', suit };
       }
