@@ -59,7 +59,14 @@ export function detectPatternWithSuit(tiles34: number[]): PatternResult {
     if (c === 2) pairs++;
     if (c === 4) pairs += 2;
   }
-  if (pairs === 7) return { name: '七对子' };
+  if (pairs === 7) {
+    // 七对子也携带花色信息（用于道具卡花色判定）
+    const { nonZero, z } = countSuits(tiles34);
+    if (nonZero.length === 1 && z === 0) {
+      return { name: '七对子', suit: nonZero[0] as SuitType };
+    }
+    return { name: '七对子' };
+  }
 
   // 检查国士无双
   const yaochuIndices = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
@@ -143,5 +150,5 @@ export function detectPattern(tiles34: number[]): string {
  * 例如：isSuitPattern(result, 's') 检查是否条一色（清一色(条) 或 九莲宝灯(条)）
  */
 export function isSuitPattern(result: PatternResult, suit: SuitType): boolean {
-  return (result.name === '清一色' || result.name === '九莲宝灯') && result.suit === suit;
+  return (result.name === '清一色' || result.name === '九莲宝灯' || result.name === '七对子') && result.suit === suit;
 }
