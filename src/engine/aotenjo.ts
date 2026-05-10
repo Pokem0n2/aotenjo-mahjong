@@ -1,7 +1,8 @@
 import { Tile, TileId, Suit, ALL_TILE_IDS, createTile, shuffleDeck, handToCounts, TILE_NAMES, UNIVERSAL_TILE_ID, createUniversalTile } from '../types/tile';
 import { HandState, createHand, initHand, handDraw, handDiscard } from './hand';
 import { AgariResult } from './agari';
-import { tilesTo34, isAgariWithShanten, evaluateHandWithUniversal, getPatternName } from './shanten-new';
+import { tilesTo34, isAgariWithShanten, evaluateHandWithUniversal } from './shanten-new';
+import { detectPattern } from './pattern';
 
 // ========== 牌山状态 ==========
 export interface WallState {
@@ -369,7 +370,7 @@ export function discardAndDraw(
       const tiles34 = tilesTo34(finalHand.tiles);
       if (isAgariWithShanten(tiles34)) {
         agariResult = { isAgari: true, form: 'standard', melds: [], waits: [], isTsumo: true, isMenzen: true };
-        bestPattern = getPatternName(tiles34);  // 使用正确的牌型识别
+        bestPattern = detectPattern(tiles34);
         bestFan = calculateFan(bestPattern, finalHand);
       }
     }
@@ -533,7 +534,7 @@ export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean;
   const tiles34 = tilesTo34(hand.tiles);
   if (isAgariWithShanten(tiles34)) {
     // 正确识别牌型名称
-    const pattern = getPatternName(tiles34);
+    const pattern = detectPattern(tiles34);
     const fan = calculateFan(pattern, hand);
     const baseScore = calculateBaseScore(hand);
     return {
@@ -577,17 +578,6 @@ function calculateFan(pattern: string, hand?: HandState): number {
     '清老头': 26,
     '四杠子': 26
   };
-  
-  // 检查清一色/混一色
-  if (hand && hand.tiles.length >= 13) {
-    const suits = new Set(hand.tiles.map(t => t.suit));
-    if (suits.size === 1 && !suits.has('z')) {
-      return fanMap['清一色'] || 6;
-    }
-    if (suits.size === 2 && suits.has('z')) {
-      return fanMap['混一色'] || 3;
-    }
-  }
   
   return fanMap[pattern] || 1;
 }
