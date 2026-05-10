@@ -721,7 +721,7 @@ export function createGameState(): GameState {
     itemSlots: Array(8).fill(null).map(() => ({ card: null, multiplier: 1 })),
     shopChoices: [],
     gameOver: false,
-    message: '欢迎来到青天井！'
+    message: '欢迎来到青云之志！'
   };
 }
 

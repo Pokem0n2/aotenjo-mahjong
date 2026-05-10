@@ -389,7 +389,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   // ========== 渲染标题画面 ==========
   const renderTitle = () => (
     <div className={styles.titleScreen}>
-      <h1 className={styles.title}>青天井</h1>
+      <h1 className={styles.title}>青云之志</h1>
       <p className={styles.subtitle}>麻将版小丑牌</p>
       <button className={styles.startButton} onClick={startNewGame}>
         开始游戏
