@@ -1,8 +1,8 @@
 .aotenjoGame {
   width: 100%;
   min-height: 100vh;
-  background: #0f0f1e;
-  color: #eee;
+  background: #e8f4f0;
+  color: #2a4a4a;
   font-family: 'Microsoft YaHei', sans-serif;
   padding: 20px;
   box-sizing: border-box;
@@ -20,22 +20,22 @@
 
 .title {
   font-size: 4rem;
-  color: #ffd700;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  color: #306060;
+  text-shadow: 0 0 20px rgba(48, 96, 96, 0.3);
   margin-bottom: 10px;
 }
 
 .subtitle {
   font-size: 1.5rem;
-  color: #aaa;
+  color: #609090;
   margin-bottom: 40px;
 }
 
 .startButton {
   padding: 15px 50px;
   font-size: 1.5rem;
-  background: #ffd700;
-  color: #1a1a2e;
+  background: #60a080;
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -44,7 +44,7 @@
 
 .startButton:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 30px rgba(96, 160, 128, 0.4);
 }
 
 .testModeButton {
@@ -63,19 +63,19 @@
 .rules {
   margin-top: 40px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(96, 160, 144, 0.08);
   border-radius: 10px;
   max-width: 500px;
 }
 
 .rules h3 {
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 15px;
 }
 
 .rules p {
   margin: 8px 0;
-  color: #ccc;
+  color: #508080;
 }
 
 /* ========== 商店画面 ========== */
@@ -86,7 +86,7 @@
 }
 
 .shopScreen h2 {
-  color: #ffd700;
+  color: #306060;
   text-align: center;
   font-size: 2rem;
   margin-bottom: 10px;
@@ -94,7 +94,7 @@
 
 .shopMessage {
   text-align: center;
-  color: #aaa;
+  color: #609090;
   margin-bottom: 30px;
   font-size: 1.1rem;
 }
@@ -107,8 +107,8 @@
 }
 
 .shopCard {
-  background: rgba(255, 255, 255, 0.08);
-  border: 2px solid #333;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid #a0c0b0;
   border-radius: 12px;
   padding: 20px;
   width: 250px;
@@ -117,17 +117,18 @@
 }
 
 .shopCard:hover {
-  border-color: #ffd700;
+  border-color: #60a080;
   transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(96, 160, 128, 0.15);
 }
 
 .shopCard h3 {
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 10px;
 }
 
 .shopCard p {
-  color: #aaa;
+  color: #709090;
   font-size: 0.9rem;
   margin-bottom: 15px;
   min-height: 60px;
@@ -135,8 +136,8 @@
 
 .shopCard button {
   padding: 10px 30px;
-  background: #ffd700;
-  color: #1a1a2e;
+  background: #60a080;
+  color: #ffffff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -146,7 +147,7 @@
 
 .shopCard button:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 0 15px rgba(96, 160, 128, 0.4);
 }
 
 .itemSlots {
@@ -154,7 +155,7 @@
 }
 
 .itemSlots h3 {
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 15px;
   text-align: center;
 }
@@ -170,8 +171,8 @@
 .slot {
   width: 100px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid #444;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid #a0c0b0;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -180,7 +181,7 @@
 }
 
 .slot:hover {
-  border-color: #666;
+  border-color: #80a0a0;
 }
 
 .clickableSlot {
@@ -188,14 +189,14 @@
 }
 
 .clickableSlot:hover {
-  border-color: #ffd700;
-  background: rgba(255, 215, 0, 0.1);
+  border-color: #60a080;
+  background: rgba(96, 160, 128, 0.1);
 }
 
 .selectedSlot {
-  border-color: #ffd700 !important;
-  background: rgba(255, 215, 0, 0.2) !important;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  border-color: #60a080 !important;
+  background: rgba(96, 160, 128, 0.15) !important;
+  box-shadow: 0 0 15px rgba(96, 160, 128, 0.3);
 }
 
 .slotCard {
@@ -206,18 +207,18 @@
 }
 
 .slotCard span:first-child {
-  color: #ffd700;
+  color: #408080;
   font-size: 0.85rem;
 }
 
 .multiplier {
-  color: #ff6b6b;
+  color: #c06060;
   font-weight: bold;
   font-size: 0.9rem;
 }
 
 .emptySlot {
-  color: #555;
+  color: #a0b0b0;
 }
 
 /* ========== 游戏画面 ========== */
@@ -231,13 +232,13 @@
   gap: 30px;
   justify-content: center;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(96, 160, 144, 0.08);
   border-radius: 10px;
   margin-bottom: 20px;
 }
 
 .topBar span {
-  color: #ffd700;
+  color: #408080;
   font-size: 1.1rem;
 }
 
@@ -253,8 +254,8 @@
 .itemSlot {
   width: 90px;
   height: 60px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid #444;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid #a0c0b0;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -270,16 +271,16 @@
 }
 
 .itemCard span:first-child {
-  color: #ffd700;
+  color: #408080;
 }
 
 .mult {
-  color: #ff6b6b;
+  color: #c06060;
   font-weight: bold;
 }
 
 .emptyItem {
-  color: #555;
+  color: #a0b0b0;
 }
 
 /* 牌山 - 4×9阵列 */
@@ -288,7 +289,7 @@
 }
 
 .wallSection h3 {
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 10px;
   text-align: center;
 }
@@ -305,8 +306,8 @@
 .wallTile {
   width: 60px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #333;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid #b0d0c0;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -316,38 +317,38 @@
 }
 
 .wallTile.drawn {
-  opacity: 0.5;
-  border-color: #333;
-  background: rgba(255, 255, 255, 0.02);
+  opacity: 0.4;
+  border-color: #c0d0d0;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .wallTile.currentHighlight {
-  border-color: #ffd700;
+  border-color: #60a080;
   border-width: 2px;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-  background: rgba(255, 215, 0, 0.1);
+  box-shadow: 0 0 8px rgba(96, 160, 128, 0.4);
+  background: rgba(96, 160, 128, 0.1);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
-  50% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+  0%, 100% { box-shadow: 0 0 8px rgba(96, 160, 128, 0.4); }
+  50% { box-shadow: 0 0 15px rgba(96, 160, 128, 0.6); }
 }
 
 .wallTile.future {
-  border-color: #444;
+  border-color: #c0d0d0;
 }
 
 .hiddenTile {
-  color: #666;
+  color: #a0b0b0;
   font-size: 1.2rem;
 }
 
 .emptyTile {
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed #444;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px dashed #c0d0d0;
   border-radius: 4px;
 }
 
@@ -359,7 +360,7 @@
 }
 
 .hiddenTile {
-  color: #555;
+  color: #a0b0b0;
   font-size: 1.5rem;
   font-weight: bold;
 }
@@ -370,7 +371,7 @@
 }
 
 .handSection h3 {
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 10px;
   text-align: center;
 }
@@ -385,8 +386,8 @@
 .handTile {
   width: 60px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid #555;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid #a0c0b0;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s;
@@ -399,14 +400,14 @@
 
 .handTile:hover {
   transform: translateY(-5px);
-  border-color: #ff6b6b;
-  box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+  border-color: #c06060;
+  box-shadow: 0 0 10px rgba(192, 96, 96, 0.2);
 }
 
 .handTile.lastDrawHighlight {
-  border-color: #ffd700;
+  border-color: #60a080;
   border-width: 3px;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 12px rgba(96, 160, 128, 0.5);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -415,7 +416,7 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  background: #ff4757;
+  background: #c06060;
   color: white;
   font-size: 0.7rem;
   padding: 2px 6px;
@@ -426,8 +427,8 @@
 
 /* 万能牌样式 */
 .universalTile {
-  background: linear-gradient(135deg, #4a0080, #800080);
-  border: 2px solid #ffd700;
+  background: linear-gradient(135deg, #604080, #804080);
+  border: 2px solid #60a080;
   cursor: not-allowed;
   opacity: 0.9;
 }
@@ -440,8 +441,8 @@
   justify-content: center;
   font-size: 2rem;
   font-weight: bold;
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  color: #60a080;
+  text-shadow: 0 0 10px rgba(96, 160, 128, 0.5);
 }
 
 /* 禁用状态 */
@@ -452,7 +453,7 @@
 
 .handTile:active {
   transform: translateY(-2px);
-  border-color: #ff4757;
+  border-color: #c06060;
 }
 
 /* ========== 悬停听牌预览浮窗 ========== */
@@ -466,13 +467,13 @@
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.95);
-  border: 2px solid #ffd700;
+  background: rgba(42, 74, 74, 0.95);
+  border: 2px solid #60a080;
   border-radius: 8px;
   padding: 8px 12px;
   z-index: 1000;
   min-width: max-content;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 20px rgba(42, 74, 74, 0.4);
   pointer-events: none;
 }
 
@@ -484,11 +485,11 @@
   left: 50%;
   transform: translateX(-50%);
   border: 8px solid transparent;
-  border-top-color: #ffd700;
+  border-top-color: #60a080;
 }
 
 .tooltipTitle {
-  color: #ffd700;
+  color: #a0e0c0;
   font-size: 0.8rem;
   font-weight: bold;
   margin-bottom: 6px;
@@ -513,14 +514,14 @@
   width: 36px;
   height: 48px;
   border-radius: 4px;
-  border: 2px dashed #ffd700;
+  border: 2px dashed #60a080;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffd700;
+  color: #60a080;
   font-size: 1.2rem;
   font-weight: bold;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* 操作区 */
@@ -531,7 +532,7 @@
 
 .message {
   font-size: 1.2rem;
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 15px;
   min-height: 30px;
 }
@@ -539,7 +540,7 @@
 .discardBtn {
   padding: 12px 40px;
   font-size: 1.1rem;
-  background: #ff6b6b;
+  background: #c06060;
   color: white;
   border: none;
   border-radius: 8px;
@@ -549,11 +550,11 @@
 
 .discardBtn:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+  box-shadow: 0 0 20px rgba(192, 96, 96, 0.3);
 }
 
 .animating {
-  color: #ffd700;
+  color: #408080;
   font-size: 1.1rem;
   animation: pulse 1s infinite;
 }
@@ -571,8 +572,8 @@
   transform: translate(-50%, -50%);
   font-size: 3rem;
   font-weight: bold;
-  color: #ffd700;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  color: #408080;
+  text-shadow: 0 0 20px rgba(64, 128, 128, 0.4);
   animation: scoreFloat 2s ease-out forwards;
   pointer-events: none;
   z-index: 1000;
@@ -610,8 +611,8 @@
 .winEffectText {
   font-size: 4rem;
   font-weight: bold;
-  color: #ffd700;
-  text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+  color: #306060;
+  text-shadow: 0 0 30px rgba(48, 96, 96, 0.3);
   animation: winPulse 1.5s ease-out forwards;
 }
 
@@ -667,14 +668,14 @@
 }
 /* 得分详情 */
 .scoreDetails {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(96, 160, 144, 0.08);
   border-radius: 10px;
   padding: 15px;
   margin-top: 20px;
 }
 
 .scoreDetails h4 {
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 10px;
 }
 
@@ -685,9 +686,9 @@
 }
 
 .scoreItem {
-  color: #aaa;
+  color: #609090;
   font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.5);
   padding: 4px 10px;
   border-radius: 6px;
   white-space: nowrap;
@@ -705,13 +706,13 @@
 
 .resultScreen h2 {
   font-size: 3rem;
-  color: #ffd700;
+  color: #306060;
   margin-bottom: 20px;
 }
 
 .resultMessage {
   font-size: 1.3rem;
-  color: #ccc;
+  color: #609090;
   margin-bottom: 30px;
 }
 
@@ -720,7 +721,7 @@
 }
 
 .resultStats p {
-  color: #ffd700;
+  color: #408080;
   font-size: 1.2rem;
   margin: 10px 0;
 }
@@ -735,34 +736,33 @@
 }
 
 .nextBtn {
-  background: #ffd700;
-  color: #1a1a2e;
+  background: #60a080;
+  color: #ffffff;
 }
 
 .nextBtn:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 30px rgba(96, 160, 128, 0.4);
 }
 
 .restartBtn {
-  background: #ff6b6b;
+  background: #c06060;
   color: white;
 }
 
 .restartBtn:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+  box-shadow: 0 0 30px rgba(192, 96, 96, 0.3);
 }
 
 .homeBtn {
-  background: #4ecdc4;
+  background: #6090a0;
   color: white;
-  margin-left: 15px;
 }
 
 .homeBtn:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+  box-shadow: 0 0 30px rgba(96, 144, 160, 0.4);
 }
 
 /* ========== 排行榜 ========== */
@@ -771,14 +771,14 @@
   max-width: 600px;
   margin: 20px 0 30px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(96, 160, 144, 0.08);
   border-radius: 15px;
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  border: 1px solid rgba(96, 160, 128, 0.3);
 }
 
 .leaderboard h3 {
   font-size: 1.5rem;
-  color: #ffd700;
+  color: #408080;
   margin-bottom: 20px;
   text-align: center;
 }
@@ -791,15 +791,15 @@
 
 .leaderboardTable th {
   padding: 10px;
-  color: #aaa;
+  color: #709090;
   font-weight: normal;
-  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+  border-bottom: 1px solid rgba(96, 160, 128, 0.3);
 }
 
 .leaderboardTable td {
   padding: 12px 10px;
   text-align: center;
-  color: #eee;
+  color: #2a4a4a;
 }
 
 .leaderboardTable tbody tr {
@@ -807,20 +807,20 @@
 }
 
 .leaderboardTable tbody tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(96, 160, 128, 0.08);
 }
 
 .topRank {
-  background: rgba(255, 215, 0, 0.1) !important;
+  background: rgba(96, 160, 128, 0.12) !important;
 }
 
 .topRank td {
-  color: #ffd700;
+  color: #408080;
   font-weight: bold;
 }
 
 .emptyLeaderboard {
-  color: #888;
+  color: #a0b0b0;
   text-align: center;
   padding: 20px;
 }
@@ -834,18 +834,18 @@
 .skipBtn {
   padding: 12px 30px;
   font-size: 1rem;
-  background: #666;
-  color: #ccc;
-  border: 2px solid #888;
+  background: #a0b0b0;
+  color: #ffffff;
+  border: 2px solid #b0c0c0;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .skipBtn:hover {
-  background: #888;
+  background: #80a0a0;
   color: #fff;
-  border-color: #aaa;
+  border-color: #6090a0;
 }
 
 /* ========== 响应式 ========== */
