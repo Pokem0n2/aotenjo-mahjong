@@ -617,19 +617,25 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                   </button>
                   
                   {/* 悬停浮窗 - 显示丢弃后的听牌 */}
-                  {hoverPreview.visible && hoverPreview.tileIndex === index && hoverPreview.waits.length > 0 && (
+                  {hoverPreview.visible && hoverPreview.tileIndex === index && (
                     <div className={styles.hoverTooltip}>
-                      <div className={styles.tooltipTitle}>丢弃后听牌：</div>
-                      <div className={styles.tooltipWaits}>
-                        {hoverPreview.waits.map((waitId, i) => (
-                          <img
-                            key={`wait-${i}`}
-                            src={`/tiles/${waitId}.png`}
-                            alt={waitId}
-                            className={styles.tooltipTileImg}
-                          />
-                        ))}
-                      </div>
+                      {hoverPreview.waits.length > 0 ? (
+                        <>
+                          <div className={styles.tooltipTitle}>丢弃后听牌：</div>
+                          <div className={styles.tooltipWaits}>
+                            {hoverPreview.waits.map((waitId, i) => (
+                              <img
+                                key={`wait-${i}`}
+                                src={`/tiles/${waitId}.png`}
+                                alt={waitId}
+                                className={styles.tooltipTileImg}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <div className={styles.tooltipTitle}>丢弃后未听牌</div>
+                      )}
                     </div>
                   )}
                 </div>
