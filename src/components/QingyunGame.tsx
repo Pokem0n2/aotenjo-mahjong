@@ -319,7 +319,7 @@ const QingyunGame: React.FC<QingyunGameProps> = ({
               <h4>和了役种:</h4>
               <div className={styles.yakuList}>
                 {battle.detectedYaku.map((y, i) => (
-                  <span key={i} className={styles.yakuTag}>{y.yaku.name} {y.han}番</span>
+                  <span key={i} className={styles.yakuTag}>{y.name} {y.han}番</span>
                 ))}
               </div>
             </div>

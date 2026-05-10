@@ -8,8 +8,9 @@
  * 2. 有万能牌：移除万能牌→13张牌→计算听牌列表→万能牌可变为任意听牌
  */
 
-import { Tile, TileId, ALL_TILE_IDS } from '../types/tile';
+export { detectPattern as getPatternName } from './pattern';
 import { detectPattern as getPatternName } from './pattern';
+import { Tile, TileId, ALL_TILE_IDS } from '../types/tile';
 
 // 常量定义
 const SHANTEN_AGARI = -1;
