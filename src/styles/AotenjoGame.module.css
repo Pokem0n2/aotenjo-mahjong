@@ -525,6 +525,9 @@
 
 /* 操作区 */
 .actions {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
 .message {
   font-size: 1.2rem;
