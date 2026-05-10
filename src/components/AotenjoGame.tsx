@@ -627,7 +627,11 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                       <div className={styles.tooltipTitle}>丢弃后听牌：</div>
                       <div className={styles.tooltipWaits}>
                         {hoverPreview.waits.length === 34 ? (
-                          <div className={styles.tooltipUniversal}>All</div>
+                          <img
+                            src="/tiles/any.png"
+                            alt="任意牌"
+                            className={styles.tooltipTileImg}
+                          />
                         ) : (
                           hoverPreview.waits.map((waitId, i) => (
                             <img
