@@ -509,11 +509,22 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.tooltipUniversal {
+  width: 36px;
+  height: 48px;
+  border-radius: 4px;
+  border: 2px dashed #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.5);
+}
+
 /* 操作区 */
 .actions {
-  text-align: center;
-  margin-bottom: 20px;
-}
 
 .message {
   font-size: 1.2rem;
