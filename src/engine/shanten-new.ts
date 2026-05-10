@@ -623,6 +623,34 @@ export function getPatternName(tiles34: number[]): string {
   if (suitCounts.s > 0) nonZeroSuits.push('s');
   if (suitCounts.z > 0) nonZeroSuits.push('z');
   
+  // 检查九莲宝灯（必须在清一色之前判定，因为九莲宝灯是清一色的特殊形式）
+  // 九莲宝灯：同花色1112345678999 + 任意一张同花色牌 = 14张
+  // 关键特征：9种牌各至少1张，且1和9至少有2张（作为雀头或刻子的一部分）
+  if (nonZeroSuits.length === 1 && suitCounts.z === 0) {
+    let suitStart = -1;
+    if (suitCounts.m > 0) suitStart = 0;
+    else if (suitCounts.p > 0) suitStart = 9;
+    else if (suitCounts.s > 0) suitStart = 18;
+    
+    if (suitStart >= 0) {
+      // 检查9种牌是否各至少1张
+      let hasAllNine = true;
+      for (let i = 0; i < 9; i++) {
+        if (tiles34[suitStart + i] < 1) {
+          hasAllNine = false;
+          break;
+        }
+      }
+      
+      // 九莲宝灯必须满足：9种牌各至少1张，且1和9至少有2张，且总共14张
+      // 因为九莲宝灯结构要求111...和...999
+      const totalTiles = tiles34.reduce((sum, c) => sum + c, 0);
+      if (hasAllNine && tiles34[suitStart] >= 2 && tiles34[suitStart + 8] >= 2 && totalTiles === 14) {
+        return '九莲宝灯';
+      }
+    }
+  }
+  
   if (nonZeroSuits.length === 1) {
     if (suitCounts.m > 0) return '清一色(万)';
     if (suitCounts.p > 0) return '清一色(筒)';
