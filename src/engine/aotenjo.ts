@@ -392,10 +392,15 @@ export function discardAndDraw(
       const formulaParts: string[] = [];
       formulaParts.push(`基础分${baseScore}`);
       formulaParts.push(`×${bestFan}番`);
+      
+      // 应用道具卡效果
+      let effectResult: { finalScore: number; details: string[] } | null = null;
       if (itemSlots && itemSlots.length > 0) {
-        const effectResult = applyItemEffects(baseScore * bestFan, bestPattern, itemSlots, finalHand);
-        if (effectResult.finalScore !== baseScore * bestFan) {
-          // 有道具卡加成，显示具体加成
+        effectResult = applyItemEffects(baseScore * bestFan, bestPattern, itemSlots, finalHand);
+        score = effectResult.finalScore;
+        
+        // 只有实际有道具卡加成时才显示倍率
+        if (effectResult.details.length > 0) {
           const multiplier = effectResult.details.filter(d => d.indexOf('×') >= 0).map(d => {
             const match = d.match(/×([\d.]+)/);
             return match ? match[1] : '';
@@ -405,6 +410,7 @@ export function discardAndDraw(
           }
         }
       }
+      
       const scoreFormula = formulaParts.join(' ') + ` = ${formatScore(score)}分`;
       
       return {
@@ -596,6 +602,8 @@ export function calculateBaseScore(hand: HandState): number {
 }
 
 // ========== 道具卡效果应用（含万能牌） ==========
+// 注意：传入的 baseScore 已经是"基础分 × 番数"后的结果
+// 本函数只应用道具卡的倍率效果
 export function applyItemEffects(
   baseScore: number,
   pattern: string,
@@ -603,13 +611,8 @@ export function applyItemEffects(
   hand?: HandState
 ): { finalScore: number; details: string[]; universalTiles?: Tile[] } {
   let score = baseScore;
-  const details: string[] = [`基础分: ${formatScore(baseScore)}`];
+  const details: string[] = [];
   let universalTiles: Tile[] = [];
-  
-  // 先应用番数
-  const fan = calculateFan(pattern, hand);
-  score *= fan;
-  details.push(`×${fan}番 = ${formatScore(Math.floor(score))}`);
   
   // 依次应用8个槽位的道具卡
   for (let i = 0; i < itemSlots.length; i++) {
