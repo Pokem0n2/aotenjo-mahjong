@@ -487,7 +487,11 @@ export function evaluateHandWithUniversal(handTiles: Tile[]): BestUniversalResul
           // 计算牌型得分（简化版）
           const fan = calculatePatternFan(tempTiles);
           
-          if (fan > bestFan) {
+          // 番数更高，或番数相同但牌面数字更大（优先选9而非1）
+          const waitNum = parseInt(waitTileId.charAt(0));
+          const bestNum = bestTileId ? parseInt(bestTileId.charAt(0)) : 0;
+          
+          if (fan > bestFan || (fan === bestFan && waitNum > bestNum)) {
             bestFan = fan;
             bestTileId = waitTileId;
             // 根据牌型确定pattern名称

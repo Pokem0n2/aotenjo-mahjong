@@ -533,18 +533,18 @@ export function autoDiscardAfterWin(wall: WallState, hand: HandState): {
 }
 
 // ========== 判断胡牌 ==========
-export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean; pattern: string; fan: number; score: number } {
+export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean; pattern: PatternResult; fan: number; score: number } {
   const lastTile = winningTile || hand.lastDraw;
   if (!lastTile || hand.tiles.length !== 14) {
-    return { isWin: false, pattern: '', fan: 0, score: 0 };
+    return { isWin: false, pattern: { name: '' }, fan: 0, score: 0 };
   }
   
   // 使用向听数计算判定胡牌（直接对14张牌判定）
   const tiles34 = tilesTo34(hand.tiles);
   if (isAgariWithShanten(tiles34)) {
-    // 正确识别牌型名称
-    const pattern = detectPattern(tiles34);
-    const fan = calculateFan(pattern, hand);
+    // 正确识别牌型名称和花色
+    const pattern = detectPatternWithSuit(tiles34);
+    const fan = calculateFan(pattern.name, hand);
     const baseScore = calculateBaseScore(hand);
     return {
       isWin: true,
@@ -554,7 +554,7 @@ export function checkWin(hand: HandState, winningTile?: Tile): { isWin: boolean;
     };
   }
   
-  return { isWin: false, pattern: '', fan: 0, score: 0 };
+  return { isWin: false, pattern: { name: '' }, fan: 0, score: 0 };
 }
 
 // ========== 根据和了形态获取牌型名称 ==========

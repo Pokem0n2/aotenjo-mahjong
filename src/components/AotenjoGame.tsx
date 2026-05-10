@@ -11,6 +11,7 @@ import {
   setTestMode, isTestMode
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES, TileId } from '../types/tile';
+import { PatternResult } from '../engine/pattern';
 import { handDiscard } from '../engine/hand';
 import { getWaitsAfterDiscard } from '../engine/shanten-new';
 
@@ -129,7 +130,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   }, []);
 
   // ========== 处理胡牌 ==========
-  const handleWin = useCallback((currentLevel: LevelState, pattern: string, fan: number, winScore: number) => {
+  const handleWin = useCallback((currentLevel: LevelState, pattern: PatternResult, fan: number, winScore: number) => {
     const { finalScore, details, universalTiles } = applyItemEffects(
       winScore,
       pattern,
@@ -139,23 +140,24 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     
     const newScore = currentLevel.currentScore + finalScore;
     const newTotalWins = currentLevel.totalWins + 1;
+    const patternName = pattern.name;
     
     const newLevel = {
       ...currentLevel,
       currentScore: newScore,
       lastWinScore: finalScore,
       totalWins: newTotalWins,
-      itemSlots: updateItemsAfterWin(currentLevel.itemSlots, pattern)
+      itemSlots: updateItemsAfterWin(currentLevel.itemSlots, patternName)
     };
     
     setLevelState(newLevel);
     levelRef.current = newLevel;
     setScoreDetails(details);
-    setMessage(`🎉 胡牌！${pattern} - 获得 ${formatScore(finalScore)}分 (累计: ${formatScore(newScore)})`);
+    setMessage(`🎉 胡牌！${patternName} - 获得 ${formatScore(finalScore)}分 (累计: ${formatScore(newScore)})`);
     
     // 显示动画
     setScorePopup({ score: finalScore, visible: true });
-    setWinEffect({ pattern, visible: true });
+    setWinEffect({ pattern: patternName, visible: true });
     
     setTimeout(() => {
       setScorePopup(prev => ({ ...prev, visible: false }));
