@@ -404,6 +404,8 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
             const deckNames: Record<TestDeckType, string> = {
               normal: '常规牌组',
               tiao: '条一色牌组',
+              tong: '筒一色牌组',
+              wan: '万一色牌组',
               guoshi: '国士无双牌组'
             };
             setMessage(`测试牌组已切换：${deckNames[newDeck]}`);
@@ -419,6 +421,8 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
         >
           <option value="normal">常规牌组</option>
           <option value="tiao">条一色牌组</option>
+          <option value="tong">筒一色牌组</option>
+          <option value="wan">万一色牌组</option>
           <option value="guoshi">国士无双牌组</option>
         </select>
       </div>

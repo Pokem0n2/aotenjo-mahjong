@@ -159,7 +159,7 @@ export function addToLeaderboard(score: number, level: number): LeaderboardEntry
 }
 
 // ========== 测试牌组类型 ==========
-export type TestDeckType = 'normal' | 'tiao' | 'guoshi';
+export type TestDeckType = 'normal' | 'tiao' | 'tong' | 'wan' | 'guoshi';
 
 let TEST_DECK: TestDeckType = 'normal';
 
@@ -187,6 +187,46 @@ function createTiaoDeck(): Tile[] {
   while (deck.length < 50) {
     deck.push(createTile(manIds[manIdx % 9]));
     manIdx++;
+  }
+  return deck;
+}
+
+// ========== 创建筒一色测试牌组 ==========
+function createTongDeck(): Tile[] {
+  const deck: Tile[] = [];
+  // 筒子牌 (1p-9p)，每种4张 = 36张
+  const pinIds: TileId[] = ['1p', '2p', '3p', '4p', '5p', '6p', '7p', '8p', '9p'];
+  for (const id of pinIds) {
+    for (let i = 0; i < 4; i++) {
+      deck.push(createTile(id));
+    }
+  }
+  // 填充到50张（剩余14张用万子）
+  const manIds: TileId[] = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m'];
+  let manIdx = 0;
+  while (deck.length < 50) {
+    deck.push(createTile(manIds[manIdx % 9]));
+    manIdx++;
+  }
+  return deck;
+}
+
+// ========== 创建万一色测试牌组 ==========
+function createWanDeck(): Tile[] {
+  const deck: Tile[] = [];
+  // 万子牌 (1m-9m)，每种4张 = 36张
+  const manIds: TileId[] = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m'];
+  for (const id of manIds) {
+    for (let i = 0; i < 4; i++) {
+      deck.push(createTile(id));
+    }
+  }
+  // 填充到50张（剩余14张用筒子）
+  const pinIds: TileId[] = ['1p', '2p', '3p', '4p', '5p', '6p', '7p', '8p', '9p'];
+  let pinIdx = 0;
+  while (deck.length < 50) {
+    deck.push(createTile(pinIds[pinIdx % 9]));
+    pinIdx++;
   }
   return deck;
 }
@@ -228,6 +268,10 @@ export function createLevel(level: number, itemSlots: ItemSlot[], cheatMode: boo
   let fullDeck: Tile[];
   if (testDeck === 'tiao') {
     fullDeck = createTiaoDeck();
+  } else if (testDeck === 'tong') {
+    fullDeck = createTongDeck();
+  } else if (testDeck === 'wan') {
+    fullDeck = createWanDeck();
   } else if (testDeck === 'guoshi') {
     fullDeck = createGuoshiDeck();
   } else {
