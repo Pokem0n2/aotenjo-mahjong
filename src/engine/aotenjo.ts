@@ -381,8 +381,20 @@ export function discardAndDraw(
       let score = baseScore * bestFan;
       
       // 获取牌型结果（含花色信息，用于道具卡判定）
-      const tiles34 = tilesTo34(finalHand.tiles);
-      const patternResult = detectPatternWithSuit(tiles34);
+      // 有万能牌时，使用evaluateHandWithUniversal返回的牌型名称，并补充花色信息
+      let patternResult: PatternResult;
+      if (hasUniversal) {
+        const tiles34 = tilesTo34(finalHand.tiles);
+        const suitResult = detectPatternWithSuit(tiles34);
+        // 使用evaluateHandWithUniversal的牌型名称（更准确），但保留花色信息
+        patternResult = {
+          name: bestPatternName,
+          suit: suitResult.suit
+        };
+      } else {
+        const tiles34 = tilesTo34(finalHand.tiles);
+        patternResult = detectPatternWithSuit(tiles34);
+      }
       
       // 应用道具卡效果（负重前行等）
       if (itemSlots && itemSlots.length > 0) {
