@@ -2,7 +2,7 @@ import { Tile, TileId, Suit, ALL_TILE_IDS, createTile, shuffleDeck, handToCounts
 import { HandState, createHand, initHand, handDraw, handDiscard } from './hand';
 import { AgariResult } from './agari';
 import { tilesTo34, isAgariWithShanten, evaluateHandWithUniversal } from './shanten-new';
-import { detectPattern } from './pattern';
+import { detectPattern, detectPatternWithSuit, isSuitPattern, PatternResult } from './pattern';
 
 // ========== 牌山状态 ==========
 export interface WallState {
@@ -379,9 +379,13 @@ export function discardAndDraw(
       const baseScore = calculateBaseScore(finalHand);
       let score = baseScore * bestFan;
       
+      // 获取牌型结果（含花色信息，用于道具卡判定）
+      const tiles34 = tilesTo34(finalHand.tiles);
+      const patternResult = detectPatternWithSuit(tiles34);
+      
       // 应用道具卡效果（负重前行等）
       if (itemSlots && itemSlots.length > 0) {
-        const effectResult = applyItemEffects(score, bestPattern, itemSlots, finalHand);
+        const effectResult = applyItemEffects(score, patternResult, itemSlots, finalHand);
         score = effectResult.finalScore;
       }
       
@@ -394,19 +398,18 @@ export function discardAndDraw(
       formulaParts.push(`×${bestFan}番`);
       
       // 应用道具卡效果
-      let effectResult: { finalScore: number; details: string[] } | null = null;
+      let effectResult: { finalScore: number; details: string[]; totalMultiplier: number } | null = null;
       if (itemSlots && itemSlots.length > 0) {
-        effectResult = applyItemEffects(baseScore * bestFan, bestPattern, itemSlots, finalHand);
+        effectResult = applyItemEffects(baseScore * bestFan, patternResult, itemSlots, finalHand);
         score = effectResult.finalScore;
         
-        // 只有实际有道具卡加成时才显示倍率
-        if (effectResult.details.length > 0) {
-          const multiplier = effectResult.details.filter(d => d.indexOf('×') >= 0).map(d => {
-            const match = d.match(/×([\d.]+)/);
-            return match ? match[1] : '';
-          }).filter(Boolean);
-          if (multiplier.length > 0) {
-            formulaParts.push(`×${multiplier.join('×')}倍率`);
+        // 只有实际有道具卡倍率加成时才显示倍率
+        if (effectResult.totalMultiplier > 1) {
+          const totalMul = effectResult.totalMultiplier;
+          if (totalMul > 10000) {
+            formulaParts.push(`×${totalMul.toExponential(2)}倍率`);
+          } else {
+            formulaParts.push(`×${totalMul.toFixed(2)}倍率`);
           }
         }
       }
@@ -606,13 +609,14 @@ export function calculateBaseScore(hand: HandState): number {
 // 本函数只应用道具卡的倍率效果
 export function applyItemEffects(
   baseScore: number,
-  pattern: string,
+  patternResult: PatternResult,
   itemSlots: ItemSlot[],
   hand?: HandState
-): { finalScore: number; details: string[]; universalTiles?: Tile[] } {
+): { finalScore: number; details: string[]; totalMultiplier: number; universalTiles?: Tile[] } {
   let score = baseScore;
   const details: string[] = [];
   let universalTiles: Tile[] = [];
+  let totalMultiplier = 1;
   
   // 依次应用8个槽位的道具卡
   for (let i = 0; i < itemSlots.length; i++) {
@@ -620,12 +624,13 @@ export function applyItemEffects(
     if (!slot.card) continue;
     
     const card = slot.card;
+    let triggered = false;
+    let multiplier = 1;
     
     switch (card.id) {
       case 'wuxiang':
         // 万象天引：将手牌中的一张牌变成万能牌
         if (hand && hand.tiles.length > 0) {
-          // 选择最后一张非万能牌变成万能牌
           const targetTile = hand.tiles[hand.tiles.length - 1];
           if (targetTile.id !== 'universal') {
             universalTiles.push(targetTile);
@@ -636,56 +641,63 @@ export function applyItemEffects(
         
       case 'fuzhong1':
       case 'fuzhong2':
-        score *= slot.multiplier;
-        details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${formatScore(Math.floor(score))}`);
+        triggered = true;
+        multiplier = slot.multiplier;
         break;
         
       case 'tiaotiao':
-        if (pattern === '清一色' || pattern.indexOf('条') >= 0 || pattern.indexOf('清一色(条)') >= 0) {
-          score *= 10;
-          details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
+        // 条一色：清一色(条) 或 九莲宝灯(条)
+        if (isSuitPattern(patternResult, 's')) {
+          triggered = true;
+          multiplier = 10;
         }
         break;
         
       case 'binbin':
-        if (pattern === '清一色' || pattern.indexOf('筒') >= 0 || pattern.indexOf('清一色(筒)') >= 0) {
-          score *= 10;
-          details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
+        // 筒一色：清一色(筒) 或 九莲宝灯(筒)
+        if (isSuitPattern(patternResult, 'p')) {
+          triggered = true;
+          multiplier = 10;
         }
         break;
         
       case 'wanwan':
-        if (pattern === '清一色' || pattern.indexOf('万') >= 0 || pattern.indexOf('清一色(万)') >= 0) {
-          score *= 10;
-          details.push(`[槽${i+1}] ${card.name} ×10 = ${formatScore(Math.floor(score))}`);
+        // 万一色：清一色(万) 或 九莲宝灯(万)
+        if (isSuitPattern(patternResult, 'm')) {
+          triggered = true;
+          multiplier = 10;
         }
         break;
         
       case 'guoshi':
-        if (pattern === '国士无双') {
-          score *= 52;
-          details.push(`[槽${i+1}] ${card.name} ×52 = ${formatScore(Math.floor(score))}`);
+        if (patternResult.name === '国士无双') {
+          triggered = true;
+          multiplier = 52;
         }
         break;
         
       case 'tongtian':
-        // 通天藤蔓：检查万能牌临时变成的牌是否是条子牌
-        // 条子牌索引：18-26 (1s-9s)
+        // 通天藤蔓：条一色（清一色(条) 或 九莲宝灯(条)）
+        // 或者万能牌临时变成了条子牌
         const hasTongtianUniversal = universalTiles.length > 0 && universalTiles.some(tile => {
           const idx = ALL_TILE_IDS.indexOf(tile.id as TileId);
           return idx >= 18 && idx <= 26;
         });
-        // 兼容旧逻辑：如果universalTiles为空，检查pattern
-        const isTongtianPattern = pattern === '清一色' || pattern.indexOf('条') >= 0 || pattern.indexOf('清一色(条)') >= 0;
-        if (hasTongtianUniversal || (universalTiles.length === 0 && isTongtianPattern)) {
-          score *= slot.multiplier;
-          details.push(`[槽${i+1}] ${card.name} ×${slot.multiplier.toFixed(2)} = ${formatScore(Math.floor(score))}`);
+        if (hasTongtianUniversal || isSuitPattern(patternResult, 's')) {
+          triggered = true;
+          multiplier = slot.multiplier;
         }
         break;
     }
+    
+    if (triggered && multiplier !== 1) {
+      score *= multiplier;
+      totalMultiplier *= multiplier;
+      details.push(`[槽${i+1}] ${card.name} ×${multiplier.toFixed(2)} = ${formatScore(Math.floor(score))}`);
+    }
   }
   
-  return { finalScore: Math.floor(score), details, universalTiles };
+  return { finalScore: Math.floor(score), details, totalMultiplier, universalTiles };
 }
 
 // ========== 创建初始游戏状态 ==========
