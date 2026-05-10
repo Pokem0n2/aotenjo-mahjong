@@ -471,7 +471,7 @@
   border-radius: 8px;
   padding: 8px 12px;
   z-index: 1000;
-  white-space: nowrap;
+  min-width: max-content;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
   pointer-events: none;
 }

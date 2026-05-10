@@ -29,6 +29,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const [scoreDetails, setScoreDetails] = useState<string[]>([]);
   const [scorePopup, setScorePopup] = useState<{ score: number; visible: boolean }>({ score: 0, visible: false });
   const [winEffect, setWinEffect] = useState<{ pattern: string; visible: boolean }>({ pattern: '', visible: false });
+  const [hasWon, setHasWon] = useState(false); // 当前关卡是否已胡牌
   const [universalDisplay, setUniversalDisplay] = useState<TileId | null>(null); // 万能牌临时显示的牌ID
   const [shopSlotIndex, setShopSlotIndex] = useState<number | null>(null);
   const [animating, setAnimating] = useState(false);
@@ -59,6 +60,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setScreen('shop');
     setMessage('选择你的第一张道具卡！');
     setScoreDetails([]);
+    setHasWon(false);
   }, []);
 
   // ========== 进入商店 ==========
@@ -119,6 +121,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setLevelState(levelData);
     levelRef.current = levelData;
     setScreen('game');
+    setHasWon(false);
     setMessage(`第 ${level} 关 - 目标: ${formatScore(levelData.targetScore)}分 | 已自动摸入${levelData.hand.lastDraw ? TILE_NAMES[levelData.hand.lastDraw.id as import('../types/tile').TileId] : ''}，请选择一张牌丢弃`);
     setScoreDetails([]);
     setAnimating(false); // 重置动画状态
@@ -310,6 +313,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     
     if (result.isWin) {
       // 胡牌了！累加得分到关卡总分，并更新道具卡效果
+      setHasWon(true);
       const updatedItems = updateItemsAfterWin(newLevel.itemSlots, result.winPattern);
       const updatedLevel: LevelState = {
         ...newLevel,
@@ -376,6 +380,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setMessage('');
     setScoreDetails([]);
     setAnimating(false);
+    setHasWon(false);
     setUniversalDisplay(null); // 清除万能牌临时显示
   }, []);
 
@@ -577,7 +582,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                   key={`${tile.id}-${index}`}
                   className={styles.handTileWrapper}
                   onMouseEnter={() => {
-                    if (!animating && !isUniversal && levelState) {
+                    if (!animating && !isUniversal && levelState && !hasWon) {
                       const waits = getWaitsAfterDiscard(levelState.hand.tiles, index);
                       setHoverPreview({ tileIndex: index, waits, visible: true });
                     }
@@ -616,26 +621,20 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                     {isLastDraw && <div className={styles.newBadge}>新</div>}
                   </button>
                   
-                  {/* 悬停浮窗 - 显示丢弃后的听牌 */}
-                  {hoverPreview.visible && hoverPreview.tileIndex === index && (
+                  {/* 悬停浮窗 - 仅听牌时显示 */}
+                  {hoverPreview.visible && hoverPreview.tileIndex === index && hoverPreview.waits.length > 0 && (
                     <div className={styles.hoverTooltip}>
-                      {hoverPreview.waits.length > 0 ? (
-                        <>
-                          <div className={styles.tooltipTitle}>丢弃后听牌：</div>
-                          <div className={styles.tooltipWaits}>
-                            {hoverPreview.waits.map((waitId, i) => (
-                              <img
-                                key={`wait-${i}`}
-                                src={`/tiles/${waitId}.png`}
-                                alt={waitId}
-                                className={styles.tooltipTileImg}
-                              />
-                            ))}
-                          </div>
-                        </>
-                      ) : (
-                        <div className={styles.tooltipTitle}>丢弃后未听牌</div>
-                      )}
+                      <div className={styles.tooltipTitle}>丢弃后听牌：</div>
+                      <div className={styles.tooltipWaits}>
+                        {hoverPreview.waits.map((waitId, i) => (
+                          <img
+                            key={`wait-${i}`}
+                            src={`/tiles/${waitId}.png`}
+                            alt={waitId}
+                            className={styles.tooltipTileImg}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
