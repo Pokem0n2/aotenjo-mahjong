@@ -7,7 +7,6 @@ import { Tile, TileId, ALL_TILE_IDS, createTile, createUniversalTile } from '../
 import { HandState, initHand, handDraw, handDiscard } from './hand';
 import { isAgari, getTenpaiTiles, AgariResult } from './agari';
 import { calculateShanten, calculateShantenWithUniversal, ShantenResult } from './shanten';
-import { detectYaku, DetectedYaku } from './yaku';
 import { calculateFinalScore, DEFAULT_SCORE_CONFIG } from './score';
 import { AmuletState, createAmuletState, getTotalAmuletEffects } from './amulet';
 import { LevelState, FloorConfig, createLevelState, enterNextFloor, clearFloor, generateFloorConfig } from './level';
@@ -58,7 +57,7 @@ export interface BattleState {
   tsumoCount: number; // 连续自摸次数
   lastAction: string;
   agariResult: AgariResult | null;
-  detectedYaku: DetectedYaku[];
+  detectedYaku: { name: string; han: number }[];
   shanten: ShantenResult | null;
   tenpaiTiles: TileId[];
   canTsumo: boolean;
@@ -473,15 +472,9 @@ export function doTsumo(state: GameModeState): GameModeState {
   const battle = { ...state.battle };
   const agari = battle.agariResult;
 
-  // 检测役种
-  const yakuList = detectYaku(
-    battle.hand,
-    agari!.winningTile!,
-    agari!.isTsumo,
-    true, // isDealer (简化)
-    '1z' as TileId, // bakaze
-    '1z' as TileId  // jikaze
-  );
+  // 检测役种（简化版，yaku.ts已删除）
+  const yakuList: { name: string; han: number }[] = [];
+  // TODO: 单人肉鸽模式不需要完整役种检测，后续可用pattern.ts替代
   battle.detectedYaku = yakuList;
 
   // 计算番数
@@ -540,7 +533,7 @@ export function doTsumo(state: GameModeState): GameModeState {
       battle,
       level: newLevel,
       screen: 'result',
-      message: `和了！${yakuList.map(y => y.yaku.name).join(' ')} ${totalHan}番 ${score}分！敌人受到${enemyDamage}伤害！`,
+      message: `和了！${yakuList.map(y => y.name).join(' ')} ${totalHan}番 ${score}分！敌人受到${enemyDamage}伤害！`,
       history: [...state.history, {
         type: 'win',
         message: `和了 ${score}分`,
@@ -559,7 +552,7 @@ export function doTsumo(state: GameModeState): GameModeState {
     ...state,
     player: newPlayer,
     battle,
-    message: `和了！${yakuList.map(y => y.yaku.name).join(' ')} ${totalHan}番 ${score}分！敌人剩余${battle.enemyHp}HP`,
+    message: `和了！${yakuList.map(y => y.name).join(' ')} ${totalHan}番 ${score}分！敌人剩余${battle.enemyHp}HP`,
     history: [...state.history, {
       type: 'win',
       message: `和了 ${score}分`,
