@@ -582,7 +582,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                   key={`${tile.id}-${index}`}
                   className={styles.handTileWrapper}
                   onMouseEnter={() => {
-                    if (!animating && !isUniversal && levelState && !hasWon) {
+                    if (!animating && !isUniversal && levelState) {
                       const waits = getWaitsAfterDiscard(levelState.hand.tiles, index);
                       setHoverPreview({ tileIndex: index, waits, visible: true });
                     }
