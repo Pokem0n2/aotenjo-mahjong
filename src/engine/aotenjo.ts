@@ -488,7 +488,7 @@ export function discardAndDraw(
         if (effectResult.totalMultiplier > 1) {
           const totalMul = effectResult.totalMultiplier;
           if (totalMul > 10000) {
-            formulaParts.push(`×${totalMul.toExponential(2)}倍率`);
+            formulaParts.push(`×${formatScore(totalMul)}倍率`);
           } else {
             formulaParts.push(`×${totalMul.toFixed(2)}倍率`);
           }
