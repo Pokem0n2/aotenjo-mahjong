@@ -158,19 +158,21 @@ export function addToLeaderboard(score: number, level: number): LeaderboardEntry
   return topEntries;
 }
 
-// ========== 测试模式配置 ==========
-let TEST_MODE = false;
+// ========== 测试牌组类型 ==========
+export type TestDeckType = 'normal' | 'tiao' | 'guoshi';
 
-export function setTestMode(enabled: boolean): void {
-  TEST_MODE = enabled;
+let TEST_DECK: TestDeckType = 'normal';
+
+export function setTestDeck(type: TestDeckType): void {
+  TEST_DECK = type;
 }
 
-export function isTestMode(): boolean {
-  return TEST_MODE;
+export function getTestDeck(): TestDeckType {
+  return TEST_DECK;
 }
 
 // ========== 创建条一色测试牌组 ==========
-function createTestDeck(): Tile[] {
+function createTiaoDeck(): Tile[] {
   const deck: Tile[] = [];
   // 条子牌 (1s-9s)，每种4张 = 36张
   const souIds: TileId[] = ['1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s'];
@@ -186,6 +188,20 @@ function createTestDeck(): Tile[] {
     deck.push(createTile(manIds[manIdx % 9]));
     manIdx++;
   }
+  return deck;
+}
+
+// ========== 创建国士无双测试牌组 ==========
+function createGuoshiDeck(): Tile[] {
+  const deck: Tile[] = [];
+  // 国士无双需要的13种幺九牌，每种4张
+  const guoshiIds: TileId[] = ['1m', '9m', '1p', '9p', '1s', '9s', '1z', '2z', '3z', '4z', '5z', '6z', '7z'];
+  for (const id of guoshiIds) {
+    for (let i = 0; i < 4; i++) {
+      deck.push(createTile(id));
+    }
+  }
+  // 52张，超出50张没关系，shuffle后取前50张即可
   return deck;
 }
 
@@ -207,8 +223,16 @@ function hasWuxiangTianyin(itemSlots: ItemSlot[]): boolean {
 
 // ========== 创建关卡：发13张手牌 + 36张牌山 ==========
 export function createLevel(level: number, itemSlots: ItemSlot[], cheatMode: boolean = false): LevelState {
-  // 1. 创建牌组（测试模式用条一色牌组）
-  const fullDeck = TEST_MODE ? createTestDeck() : createFullDeck();
+  // 1. 创建牌组（根据测试配置选择牌组）
+  const testDeck = getTestDeck();
+  let fullDeck: Tile[];
+  if (testDeck === 'tiao') {
+    fullDeck = createTiaoDeck();
+  } else if (testDeck === 'guoshi') {
+    fullDeck = createGuoshiDeck();
+  } else {
+    fullDeck = createFullDeck();
+  }
   const shuffled = shuffleDeck(fullDeck);
   
   // 2. 检查是否有万象天引

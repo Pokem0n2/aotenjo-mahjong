@@ -8,7 +8,7 @@ import {
   tileToId, drawFromWall, autoDiscardAfterWin,
   addToLeaderboard, getLeaderboard, LeaderboardEntry,
   formatScore,
-  setTestMode, isTestMode
+  setTestDeck, getTestDeck, TestDeckType
 } from '../engine/aotenjo';
 import { Tile, TILE_NAMES, TileId } from '../types/tile';
 import { PatternResult } from '../engine/pattern';
@@ -394,21 +394,34 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       <button className={styles.startButton} onClick={startNewGame}>
         开始游戏
       </button>
-      <button 
-        className={styles.testModeButton} 
-        onClick={() => {
-          const newMode = !isTestMode();
-          setTestMode(newMode);
-          setMessage(newMode ? '测试模式已开启：条一色牌组' : '测试模式已关闭：常规牌组');
-        }}
-        style={{ 
-          marginTop: '15px',
-          background: isTestMode() ? '#ff6b6b' : '#444',
-          color: isTestMode() ? '#fff' : '#aaa'
-        }}
-      >
-        {isTestMode() ? '测试模式：ON（条一色牌组）' : '测试模式：OFF（常规牌组）'}
-      </button>
+      <div style={{ marginTop: '15px' }}>
+        <label style={{ color: '#aaa', marginRight: '8px' }}>测试牌组：</label>
+        <select
+          value={getTestDeck()}
+          onChange={(e) => {
+            const newDeck = e.target.value as TestDeckType;
+            setTestDeck(newDeck);
+            const deckNames: Record<TestDeckType, string> = {
+              normal: '常规牌组',
+              tiao: '条一色牌组',
+              guoshi: '国士无双牌组'
+            };
+            setMessage(`测试牌组已切换：${deckNames[newDeck]}`);
+          }}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            background: '#333',
+            color: '#fff',
+            border: '1px solid #555',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="normal">常规牌组</option>
+          <option value="tiao">条一色牌组</option>
+          <option value="guoshi">国士无双牌组</option>
+        </select>
+      </div>
       <div className={styles.rules}>
         <h3>游戏规则</h3>
         <p>1. 每关从完整日麻牌组中发13张手牌</p>
