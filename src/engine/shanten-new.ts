@@ -532,57 +532,33 @@ export function evaluateHandWithUniversal(handTiles: Tile[]): BestUniversalResul
  * 计算牌型番数（简化版）
  * 基于14张牌的牌型特征计算
  */
+/**
+ * 计算牌型番数
+ * 复用 aotenjo.ts 的 calculateFan 逻辑，确保一致性
+ */
 function calculatePatternFan(tiles34: number[]): number {
-  let fan = 1;
+  const pattern = getPatternName(tiles34);
   
-  // 检查七对子
-  let pairs = 0;
-  for (const c of tiles34) {
-    if (c === 2) pairs++;
-    if (c === 4) pairs += 2;
-  }
-  if (pairs === 7) return 2;
+  const fanMap: Record<string, number> = {
+    '一般': 1,
+    '七对子': 2,
+    '国士无双': 13,
+    '清一色': 6,
+    '混一色': 3,
+    '对对和': 2,
+    '小三元': 2,
+    '大三元': 13,
+    '小四喜': 13,
+    '大四喜': 26,
+    '字一色': 13,
+    '绿一色': 13,
+    '九莲宝灯': 13,
+    '四暗刻': 13,
+    '清老头': 26,
+    '四杠子': 26
+  };
   
-  // 检查国士无双
-  const yaochuIndices = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
-  let hasAllYaochu = true;
-  let hasPair = false;
-  for (const idx of yaochuIndices) {
-    if (tiles34[idx] === 0) hasAllYaochu = false;
-    if (tiles34[idx] >= 2) hasPair = true;
-  }
-  if (hasAllYaochu && hasPair) return 13;
-  
-  // 检查清一色
-  let suitCounts = { m: 0, p: 0, s: 0, z: 0 };
-  for (let i = 0; i < 34; i++) {
-    if (tiles34[i] > 0) {
-      if (i < 9) suitCounts.m += tiles34[i];
-      else if (i < 18) suitCounts.p += tiles34[i];
-      else if (i < 27) suitCounts.s += tiles34[i];
-      else suitCounts.z += tiles34[i];
-    }
-  }
-  
-  const nonZeroSuits = [suitCounts.m, suitCounts.p, suitCounts.s, suitCounts.z].filter(c => c > 0);
-  if (nonZeroSuits.length === 1 && suitCounts.z === 0) {
-    // 清一色
-    fan = Math.max(fan, 6);
-  } else if (nonZeroSuits.length === 2 && suitCounts.z > 0) {
-    // 混一色
-    fan = Math.max(fan, 3);
-  }
-  
-  // 检查对对和
-  let kotsuCount = 0;
-  for (const c of tiles34) {
-    if (c >= 3) kotsuCount++;
-  }
-  if (kotsuCount >= 4) {
-    fan = Math.max(fan, 2);
-  }
-  
-  return fan;
+  return fanMap[pattern] || 1;
 }
 
 /**
