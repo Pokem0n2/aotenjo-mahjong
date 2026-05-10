@@ -696,16 +696,27 @@ export function getWaitsAfterDiscard(handTiles: Tile[], discardIndex: number): T
   const hasUniversal = remainingTiles.some(t => t.id === 'universal');
   
   if (hasUniversal) {
-    // 有万能牌：使用 evaluateHandWithUniversal 计算最佳听牌
-    const evalResult = evaluateHandWithUniversal(remainingTiles);
-    if (evalResult.isAgari) {
-      return evalResult.waits;
+    // 有万能牌：13张牌中含1张万能牌 = 12张普通牌 + 1万能牌
+    // 万能牌可以变成任意牌，所以遍历所有34种牌，看哪种能让13张牌听牌
+    const normalTiles = remainingTiles.filter(t => t.id !== 'universal');
+    const tiles34 = tilesTo34(normalTiles);
+    const waits: TileId[] = [];
+    
+    for (let i = 0; i < 34; i++) {
+      // 模拟万能牌变成第i种牌
+      const tempTiles = [...tiles34];
+      tempTiles[i]++;
+      const shanten = calculateShanten(tempTiles);
+      if (shanten === SHANTEN_TENPAI) {
+        // 13张牌（12普通+1万能变牌）听牌了
+        waits.push(ALL_TILE_IDS[i]);
+      }
     }
+    
+    return waits;
   } else {
     // 无万能牌：直接计算13张牌的听牌列表
     const tiles34 = tilesTo34(remainingTiles);
     return getTenpaiTiles(tiles34);
   }
-  
-  return [];
 }
