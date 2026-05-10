@@ -62,6 +62,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setMessage('选择你的第一张道具卡！');
     setScoreDetails([]);
     setHasWon(false);
+    setHoverPreview({ tileIndex: -1, waits: [], visible: false });
   }, []);
 
   // ========== 进入商店 ==========
@@ -74,6 +75,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     });
     setScreen('shop');
     setMessage('选择一张道具卡！');
+    setHoverPreview({ tileIndex: -1, waits: [], visible: false });
   }, []);
 
   // ========== 选择商店道具卡 ==========
@@ -127,6 +129,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     setScoreDetails([]);
     setAnimating(false); // 重置动画状态
     setUniversalDisplay(null); // 重置万能牌显示
+    setHoverPreview({ tileIndex: -1, waits: [], visible: false }); // 重置浮窗状态
   }, []);
 
   // ========== 处理胡牌 ==========
@@ -371,21 +374,6 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     enterShop(gameRef.current.itemSlots);
   }, [enterShop]);
 
-  // ========== 重新开始 ==========
-  const restart = useCallback(() => {
-    const newGame = createGameState();
-    setGameState(newGame);
-    gameRef.current = newGame;
-    setLevelState(null);
-    levelRef.current = null;
-    setScreen('title');
-    setMessage('');
-    setScoreDetails([]);
-    setAnimating(false);
-    setHasWon(false);
-    setUniversalDisplay(null); // 清除万能牌临时显示
-  }, []);
-
   // ========== 渲染标题画面 ==========
   const renderTitle = () => (
     <div className={styles.titleScreen}>
@@ -487,7 +475,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                 <div className={styles.slotCard} title={slot.card.description}>
                   <span>{slot.card.name}</span>
                   {slot.multiplier !== 1 && (
-                    <span className={styles.multiplier}>×{slot.multiplier.toFixed(2)}</span>
+                    <span className={styles.multiplier}>×{formatScore(slot.multiplier)}</span>
                   )}
                 </div>
               ) : (
@@ -541,7 +529,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                 <div className={styles.itemCard} title={slot.card.description}>
                   <span>{slot.card.name}</span>
                   {slot.multiplier !== 1 && (
-                    <span className={styles.mult}>×{slot.multiplier.toFixed(2)}</span>
+                    <span className={styles.mult}>×{formatScore(slot.multiplier)}</span>
                   )}
                 </div>
               ) : (
@@ -737,14 +725,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
             下一关
           </button>
         ) : (
-          <>
-            <button className={styles.restartBtn} onClick={restart}>
-              重新开始
-            </button>
-            <button className={styles.homeBtn} onClick={() => setScreen('title')}>
-              返回首页
-            </button>
-          </>
+          <button className={styles.homeBtn} onClick={() => setScreen('title')}>
+            返回首页
+          </button>
         )}
       </div>
     </div>
