@@ -384,6 +384,14 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
 
   // ========== 继续下一关 ==========
   const nextLevel = useCallback(() => {
+    // 同步 levelState.itemSlots 到 gameState，确保拖拽排序后的顺序被保留
+    if (levelRef.current) {
+      setGameState(prev => {
+        const newState = { ...prev, itemSlots: levelRef.current!.itemSlots };
+        gameRef.current = newState;
+        return newState;
+      });
+    }
     // 使用 gameRef 获取最新的 gameState，避免闭包问题
     enterShop(gameRef.current.itemSlots);
   }, [enterShop]);
@@ -558,9 +566,20 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                   newSlots[draggedSlot] = newSlots[index];
                   newSlots[index] = temp;
                   
-                  const newLevel = { ...levelState, itemSlots: newSlots };
+                  // 重新排序：有卡片的在前，空位在后，保持卡片相对顺序
+                  const cards = newSlots.filter(s => s.card !== null);
+                  const empties = newSlots.filter(s => s.card === null);
+                  const sortedSlots = [...cards, ...empties];
+                  
+                  const newLevel = { ...levelState, itemSlots: sortedSlots };
                   setLevelState(newLevel);
                   levelRef.current = newLevel;
+                  
+                  // 同步更新 gameState 中的 itemSlots，确保道具卡效果实时生效
+                  const newGameState = { ...gameState, itemSlots: sortedSlots };
+                  setGameState(newGameState);
+                  gameRef.current = newGameState;
+                  
                   setDraggedSlot(null);
                 }
               }}

@@ -912,16 +912,20 @@ export function addItemCard(
   slotIndex: number
 ): ItemSlot[] {
   const newSlots = itemSlots.map(slot => ({ ...slot }));
-  
+
   let multiplier = 1;
   if (card.id === 'fuzhong') {
     multiplier = 1.5;
   } else if (card.id === 'tongtian') {
     multiplier = 1.1;
   }
-  
+
   newSlots[slotIndex] = { card, multiplier };
-  return newSlots;
+
+  // 重新排序：有卡片的在前，空位在后，保持卡片相对顺序
+  const cards = newSlots.filter(s => s.card !== null);
+  const empties = newSlots.filter(s => s.card === null);
+  return [...cards, ...empties];
 }
 
 // ========== 过关后更新道具卡 ==========
