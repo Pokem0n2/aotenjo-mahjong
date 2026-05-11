@@ -825,7 +825,11 @@
   padding: 20px;
 }
 
-/* ========== 商店跳过按钮 ========== */
+.draggingSlot {
+  opacity: 0.5;
+  border-color: #60a080;
+  box-shadow: 0 0 12px rgba(96, 160, 128, 0.4);
+}
 .skipShop {
   margin-top: 30px;
   text-align: center;

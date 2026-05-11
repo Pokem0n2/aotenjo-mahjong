@@ -725,6 +725,89 @@ export function applyItemEffects(
         multiplier = slot.multiplier;
         break;
         
+      case 'clonemaster':
+        // 克隆大师：复制左侧相邻槽位的倍率和条件效果，左侧无有效卡则复制右侧
+        {
+          let targetSlot: ItemSlot | null = null;
+          let targetIndex = -1;
+          
+          // 先尝试左侧
+          if (i > 0) {
+            const leftSlot = itemSlots[i - 1];
+            if (leftSlot.card && leftSlot.card.id !== 'wuxiang') {
+              targetSlot = leftSlot;
+              targetIndex = i - 1;
+            }
+          }
+          
+          // 左侧无有效卡，尝试右侧
+          if (!targetSlot && i < itemSlots.length - 1) {
+            const rightSlot = itemSlots[i + 1];
+            if (rightSlot.card && rightSlot.card.id !== 'wuxiang') {
+              targetSlot = rightSlot;
+              targetIndex = i + 1;
+            }
+          }
+          
+          if (targetSlot && targetSlot.card) {
+            // 复制目标槽位的判定逻辑和倍率
+            const targetCard = targetSlot.card;
+            let targetTriggered = false;
+            let targetMultiplier = 1;
+            
+            switch (targetCard.id) {
+              case 'fuzhong':
+                targetTriggered = true;
+                targetMultiplier = targetSlot.multiplier;
+                break;
+              case 'tiaotiao':
+                if (isSuitPattern(patternResult, 's')) {
+                  targetTriggered = true;
+                  targetMultiplier = 10;
+                }
+                break;
+              case 'binbin':
+                if (isSuitPattern(patternResult, 'p')) {
+                  targetTriggered = true;
+                  targetMultiplier = 10;
+                }
+                break;
+              case 'wanwan':
+                if (isSuitPattern(patternResult, 'm')) {
+                  targetTriggered = true;
+                  targetMultiplier = 10;
+                }
+                break;
+              case 'guoshi':
+                if (patternResult.name === '国士无双') {
+                  targetTriggered = true;
+                  targetMultiplier = 52;
+                }
+                break;
+              case 'tongtian':
+                const hasTongtianUniversalClone = universalTiles.length > 0 && universalTiles.some(tile => {
+                  const idx = ALL_TILE_IDS.indexOf(tile.id as TileId);
+                  return idx >= 18 && idx <= 26;
+                });
+                if (hasTongtianUniversalClone || isSuitPattern(patternResult, 's')) {
+                  targetTriggered = true;
+                  targetMultiplier = targetSlot.multiplier;
+                }
+                break;
+              case 'clonemaster':
+                // 克隆大师不能克隆另一个克隆大师，避免无限递归
+                break;
+            }
+            
+            if (targetTriggered && targetMultiplier !== 1) {
+              triggered = true;
+              multiplier = targetMultiplier;
+              details.push(`[槽${i+1}] ${card.name} 克隆[槽${targetIndex+1}]${targetCard.name} ×${targetMultiplier.toFixed(2)}`);
+            }
+          }
+        }
+        break;
+        
       case 'tiaotiao':
         // 条一色：清一色(条) 或 九莲宝灯(条)
         if (isSuitPattern(patternResult, 's')) {

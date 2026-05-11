@@ -47,6 +47,9 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const levelRef = useRef<LevelState | null>(null);
   const gameRef = useRef<GameState>(gameState);
   
+  // 拖拽排序状态
+  const [draggedSlot, setDraggedSlot] = useState<number | null>(null);
+  
   // 同步ref
   levelRef.current = levelState;
   gameRef.current = gameState;
@@ -521,12 +524,38 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           <span>胡牌: {levelState.totalWins}次</span>
         </div>
         
-        {/* 道具卡槽 */}
+        {/* 道具卡槽 - 支持拖拽排序 */}
         <div className={styles.itemSlotsBar}>
           {levelState.itemSlots.map((slot, index) => (
-            <div key={index} className={styles.itemSlot}>
+            <div 
+              key={index} 
+              className={`${styles.itemSlot} ${draggedSlot === index ? styles.draggingSlot : ''}`}
+              draggable={!!slot.card}
+              onDragStart={() => {
+                if (slot.card) setDraggedSlot(index);
+              }}
+              onDragEnd={() => setDraggedSlot(null)}
+              onDragOver={(e) => {
+                e.preventDefault();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedSlot !== null && draggedSlot !== index) {
+                  // 交换槽位
+                  const newSlots = [...levelState.itemSlots];
+                  const temp = newSlots[draggedSlot];
+                  newSlots[draggedSlot] = newSlots[index];
+                  newSlots[index] = temp;
+                  
+                  const newLevel = { ...levelState, itemSlots: newSlots };
+                  setLevelState(newLevel);
+                  levelRef.current = newLevel;
+                  setDraggedSlot(null);
+                }
+              }}
+            >
               {slot.card ? (
-                <div className={styles.itemCard} title={slot.card.description}>
+                <div className={styles.itemCard} title={`${slot.card.name}（拖拽可调整顺序）`}>
                   <span>{slot.card.name}</span>
                   {slot.multiplier !== 1 && (
                     <span className={styles.mult}>×{formatScore(slot.multiplier)}</span>
