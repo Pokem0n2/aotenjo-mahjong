@@ -19,7 +19,7 @@ export interface ItemCard {
   type: 'multiplier' | 'conditional' | 'transform';
 }
 
-// ========== 10张道具卡 ==========
+// ========== 8张道具卡 ==========
 export const ITEM_CARDS: ItemCard[] = [
   {
     id: 'wuxiang',
@@ -28,13 +28,7 @@ export const ITEM_CARDS: ItemCard[] = [
     type: 'transform'
   },
   {
-    id: 'fuzhong1',
-    name: '负重前行',
-    description: '胡牌结算时得分×N，初始N=1.5，每过一关N=N×1.5',
-    type: 'multiplier'
-  },
-  {
-    id: 'fuzhong2',
+    id: 'fuzhong',
     name: '负重前行',
     description: '胡牌结算时得分×N，初始N=1.5，每过一关N=N×1.5',
     type: 'multiplier'
@@ -67,6 +61,12 @@ export const ITEM_CARDS: ItemCard[] = [
     id: 'tongtian',
     name: '通天藤蔓',
     description: '胡牌为条一色时，得分×N，初始N=1.1，每胡一次条一色N=N×1.1',
+    type: 'conditional'
+  },
+  {
+    id: 'clonemaster',
+    name: '克隆大师',
+    description: '复制本道具卡左右两侧卡片的功能（万象天引除外）',
     type: 'conditional'
   }
 ];
@@ -720,8 +720,7 @@ export function applyItemEffects(
         }
         break;
         
-      case 'fuzhong1':
-      case 'fuzhong2':
+      case 'fuzhong':
         triggered = true;
         multiplier = slot.multiplier;
         break;
@@ -798,21 +797,25 @@ export function generateShopChoices(currentSlots?: ItemSlot[]): ItemCard[] {
   // 检查玩家是否已经有万象天引
   const hasWuxiang = currentSlots?.some(slot => slot.card?.id === 'wuxiang');
   
-  // 如果已有万象天引，从可选牌堆中移除
+  // 如果已有万象天引，从可选牌池中移除
   let availableCards = ITEM_CARDS;
   if (hasWuxiang) {
     availableCards = ITEM_CARDS.filter(c => c.id !== 'wuxiang');
   }
   
-  const shuffled = [...availableCards].sort(() => Math.random() - 0.5);
-  const choices = shuffled.slice(0, 3);
+  // 有放回随机抽取3张
+  const choices: ItemCard[] = [];
+  for (let i = 0; i < 3; i++) {
+    const randomIndex = Math.floor(Math.random() * availableCards.length);
+    choices.push(availableCards[randomIndex]);
+  }
   
   // 作弊模式：第一关强制包含负重前行
   if (currentSlots && currentSlots.every(s => s.card === null)) {
-    const hasFuzhong = choices.some(c => c.id === 'fuzhong1' || c.id === 'fuzhong2');
+    const hasFuzhong = choices.some(c => c.id === 'fuzhong');
     if (!hasFuzhong) {
       // 替换第一个选项为负重前行
-      choices[0] = ITEM_CARDS.find(c => c.id === 'fuzhong1') || choices[0];
+      choices[0] = ITEM_CARDS.find(c => c.id === 'fuzhong') || choices[0];
     }
   }
   
@@ -828,7 +831,7 @@ export function addItemCard(
   const newSlots = itemSlots.map(slot => ({ ...slot }));
   
   let multiplier = 1;
-  if (card.id === 'fuzhong1' || card.id === 'fuzhong2') {
+  if (card.id === 'fuzhong') {
     multiplier = 1.5;
   } else if (card.id === 'tongtian') {
     multiplier = 1.1;
@@ -845,7 +848,7 @@ export function updateItemsAfterLevel(itemSlots: ItemSlot[]): ItemSlot[] {
     
     const newSlot = { ...slot };
     
-    if (slot.card.id === 'fuzhong1' || slot.card.id === 'fuzhong2') {
+    if (slot.card.id === 'fuzhong') {
       newSlot.multiplier *= 1.5;
     }
     
