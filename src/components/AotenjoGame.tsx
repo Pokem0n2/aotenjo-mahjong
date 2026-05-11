@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import styles from '../styles/AotenjoGame.module.css';
 import {
   GameState, LevelState, ItemCard, ItemSlot,
@@ -50,9 +50,23 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   // 拖拽排序状态
   const [draggedSlot, setDraggedSlot] = useState<number | null>(null);
   
+  // 作弊模式：牌山全明牌
+  const [cheatReveal, setCheatReveal] = useState(false);
+  
   // 同步ref
   levelRef.current = levelState;
   gameRef.current = gameState;
+
+  // ========== 键盘监听：~键切换作弊模式 ==========
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '~' || e.key === '`') {
+        setCheatReveal(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // ========== 开始新游戏 ==========
   const startNewGame = useCallback(() => {
@@ -617,8 +631,8 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
                   {isDrawn ? (
                     // 已摸走的牌：空白占位框
                     <div className={styles.emptyTile}></div>
-                  ) : isRevealed ? (
-                    // 明牌：展示牌面
+                  ) : cheatReveal || isRevealed ? (
+                    // 作弊模式或随机明牌：展示牌面
                     <img
                       src={`/tiles/${tile.id}.png`}
                       alt={tile.id}
