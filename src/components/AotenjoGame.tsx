@@ -89,7 +89,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
     const emptySlot = currentGame.itemSlots.findIndex(slot => !slot.card);
     
     if (emptySlot !== -1) {
-      // 有空槽位，直接放入
+      // 有空槽位，新卡放在最右侧非空位（即第一个空位，因为空位始终在最右侧）
       const newSlots = addItemCard(currentGame.itemSlots, card, emptySlot);
       setGameState(prev => {
         const newState = { ...prev, itemSlots: newSlots };
@@ -99,12 +99,23 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
       
       // 进入关卡
       startLevel(currentGame.level, newSlots);
+    } else if (shopSlotIndex !== null) {
+      // 槽位已满且已选择替换位置，新卡放在被替换卡的位置
+      const newSlots = addItemCard(currentGame.itemSlots, card, shopSlotIndex);
+      setGameState(prev => {
+        const newState = { ...prev, itemSlots: newSlots };
+        gameRef.current = newState;
+        return newState;
+      });
+      setShopSlotIndex(null);
+      
+      // 进入关卡
+      startLevel(currentGame.level, newSlots);
     } else {
-      // 槽位已满，让玩家自主选择替换哪个槽位
+      // 槽位已满但未选择替换位置，提示玩家选择
       setMessage('槽位已满！请先点击下方槽位选择要替换的道具卡，再点击新卡确认');
-      setShopSlotIndex(null); // 不预设任何槽位，等待玩家点击
     }
-  }, []);
+  }, [shopSlotIndex]);
 
   // ========== 替换槽位中的道具卡 ==========
   const replaceSlot = useCallback((slotIndex: number, card: ItemCard) => {
@@ -441,7 +452,7 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
             <p>{card.description}</p>
             {gameState.itemSlots.every(s => s.card) ? (
               shopSlotIndex !== null ? (
-                <button onClick={() => replaceSlot(shopSlotIndex, card)}>
+                <button onClick={() => selectShopCard(card)}>
                   确认替换槽位 {shopSlotIndex + 1}
                 </button>
               ) : (
