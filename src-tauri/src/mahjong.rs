@@ -343,7 +343,7 @@ pub fn calculate_shanten(hand: &[TileId]) -> ShantenResult {
     ShantenResult {
         shanten: min_shanten,
         standard: std,
-        chiitoitsu,
+        chiitoitsu: chiitoi,
         kokushi,
     }
 }

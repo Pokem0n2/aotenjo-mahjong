@@ -12,9 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "qingyun-mahjong",
-        "width": 800,
-        "height": 600
+        "title": "青云之志 - 麻将Roguelike",
+        "width": 1280,
+        "height": 800,
+        "resizable": true
       }
     ],
     "security": {
@@ -23,7 +24,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
