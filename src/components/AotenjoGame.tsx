@@ -47,9 +47,14 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
   const levelRef = useRef<LevelState | null>(null);
   const gameRef = useRef<GameState>(gameState);
   
-  // 拖拽排序状态
-  const [draggedSlot, setDraggedSlot] = useState<number | null>(null);
-  
+  // 拖拽排序状态（Pointer Events，兼容 Tauri WebView）
+  const [dragState, setDragState] = useState<{
+    fromIndex: number | null;
+    overIndex: number | null;
+    startY: number;
+  }>({ fromIndex: null, overIndex: null, startY: 0 });
+  const dragRef = useRef<{ fromIndex: number | null; startY: number }>({ fromIndex: null, startY: 0 });
+
   // 作弊模式：牌山全明牌
   const [cheatReveal, setCheatReveal] = useState(false);
   
@@ -557,45 +562,67 @@ export default function AotenjoGame({ cheatMode = false }: AotenjoGameProps) {
           <span>胡牌: {levelState.totalWins}次</span>
         </div>
         
-        {/* 道具卡槽 - 支持拖拽排序 */}
-        <div className={styles.itemSlotsBar}>
+        {/* 道具卡槽 - Pointer Events 拖拽排序（兼容 Tauri WebView） */}
+        <div 
+          className={styles.itemSlotsBar}
+          onPointerMove={(e) => {
+            if (dragState.fromIndex === null) return;
+            const target = (e.target as HTMLElement).closest('[data-slot-index]');
+            if (target) {
+              const overIdx = parseInt(target.getAttribute('data-slot-index')!);
+              if (overIdx !== dragState.overIndex) {
+                setDragState(prev => ({ ...prev, overIndex: overIdx }));
+              }
+            }
+          }}
+          onPointerUp={() => {
+            if (dragState.fromIndex !== null && dragState.overIndex !== null && dragState.fromIndex !== dragState.overIndex) {
+              const from = dragState.fromIndex;
+              const to = dragState.overIndex;
+              const newSlots = [...levelState.itemSlots];
+              const temp = newSlots[from];
+              newSlots[from] = newSlots[to];
+              newSlots[to] = temp;
+              
+              const cards = newSlots.filter(s => s.card !== null);
+              const empties = newSlots.filter(s => s.card === null);
+              const sortedSlots = [...cards, ...empties];
+              
+              const newLevel = { ...levelState, itemSlots: sortedSlots };
+              setLevelState(newLevel);
+              levelRef.current = newLevel;
+              
+              const newGameState = { ...gameState, itemSlots: sortedSlots };
+              setGameState(newGameState);
+              gameRef.current = newGameState;
+            }
+            setDragState({ fromIndex: null, overIndex: null, startY: 0 });
+            dragRef.current = { fromIndex: null, startY: 0 };
+          }}
+          onPointerLeave={() => {
+            if (dragState.fromIndex !== null) {
+              setDragState({ fromIndex: null, overIndex: null, startY: 0 });
+              dragRef.current = { fromIndex: null, startY: 0 };
+            }
+          }}
+        >
           {levelState.itemSlots.map((slot, index) => (
             <div 
-              key={index} 
-              className={`${styles.itemSlot} ${draggedSlot === index ? styles.draggingSlot : ''}`}
-              draggable={!!slot.card}
-              onDragStart={() => {
-                if (slot.card) setDraggedSlot(index);
+              key={index}
+              data-slot-index={index}
+              className={`${styles.itemSlot} ${
+                dragState.fromIndex === index ? styles.draggingSlot : ''
+              } ${dragState.overIndex === index && dragState.fromIndex !== index ? styles.dropTarget : ''}`}
+              style={{ 
+                cursor: slot.card ? 'grab' : 'default',
+                touchAction: 'none',
+                userSelect: 'none',
               }}
-              onDragEnd={() => setDraggedSlot(null)}
-              onDragOver={(e) => {
+              onPointerDown={(e) => {
+                if (!slot.card) return;
                 e.preventDefault();
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (draggedSlot !== null && draggedSlot !== index) {
-                  // 交换槽位
-                  const newSlots = [...levelState.itemSlots];
-                  const temp = newSlots[draggedSlot];
-                  newSlots[draggedSlot] = newSlots[index];
-                  newSlots[index] = temp;
-                  
-                  // 重新排序：有卡片的在前，空位在后，保持卡片相对顺序
-                  const cards = newSlots.filter(s => s.card !== null);
-                  const empties = newSlots.filter(s => s.card === null);
-                  const sortedSlots = [...cards, ...empties];
-                  
-                  const newLevel = { ...levelState, itemSlots: sortedSlots };
-                  setLevelState(newLevel);
-                  levelRef.current = newLevel;
-                  
-                  // 同步更新 gameState 中的 itemSlots，确保道具卡效果实时生效
-                  const newGameState = { ...gameState, itemSlots: sortedSlots };
-                  setGameState(newGameState);
-                  gameRef.current = newGameState;
-                  
-                  setDraggedSlot(null);
-                }
+                dragRef.current = { fromIndex: index, startY: e.clientY };
+                setDragState({ fromIndex: index, overIndex: index, startY: e.clientY });
               }}
             >
               {slot.card ? (
